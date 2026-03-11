@@ -301,7 +301,7 @@ export default function LandingPage() {
     const { count: countSatisfacao, ref: refSatisfacao } = useCountUp(100);
 
     return (
-        <div style={{ backgroundColor: bgColor, fontFamily: 'Nunito, sans-serif', color: darkColor }}>
+        <div style={{ backgroundColor: bgColor, fontFamily: 'Nunito, sans-serif', color: darkColor, overflowX: 'hidden' }}>
             <style>{`
                 @keyframes float {
                   0%, 100% { transform: translateY(0px); }
@@ -325,11 +325,11 @@ export default function LandingPage() {
                 backdropFilter: scrolled ? 'blur(16px)' : 'none',
                 borderBottom: scrolled ? '1px solid rgba(229,217,204,0.6)' : 'none',
                 transition: 'all 0.4s ease',
-                padding: '16px 32px',
+                padding: '12px 16px',
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center'
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <img src={platformLogo || '/logo.png'} alt="Logo" style={{ height: '70px', objectFit: 'contain' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                    <img src={platformLogo || '/logo.png'} alt="Logo" style={{ height: '50px', objectFit: 'contain' }} />
                 </div>
                 <div className="hidden md:flex gap-8">
                     <a href="#funcionalidades" style={{ color: mutedColor, textDecoration: 'none', fontWeight: 600 }}>Funcionalidades</a>
@@ -337,18 +337,18 @@ export default function LandingPage() {
                     <a href="#planos" style={{ color: mutedColor, textDecoration: 'none', fontWeight: 600 }}>Planos</a>
                     <a href="#perguntas" style={{ color: mutedColor, textDecoration: 'none', fontWeight: 600 }}>Perguntas</a>
                 </div>
-                <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
                     {!isPrelancamento && (
-                        <Link to="/login" style={{ color: primaryColor, fontWeight: 700, textDecoration: 'none', padding: '8px 16px', borderRadius: '12px', border: `2px solid ${primaryColor}` }}>Entrar</Link>
+                        <Link to="/login" className="hidden sm:inline-block" style={{ color: primaryColor, fontWeight: 700, textDecoration: 'none', padding: '8px 16px', borderRadius: '12px', border: `2px solid ${primaryColor}` }}>Entrar</Link>
                     )}
-                    <button onClick={handleCTA} style={{ background: primaryColor, color: 'white', padding: '10px 24px', borderRadius: '12px', border: 'none', fontWeight: 700, cursor: 'pointer' }}>
+                    <button onClick={handleCTA} style={{ background: primaryColor, color: 'white', padding: '10px 20px', borderRadius: '12px', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '14px', whiteSpace: 'nowrap' }}>
                         {isPrelancamento ? 'Garantir minha vaga' : 'Começar grátis'}
                     </button>
                 </div>
             </header>
 
             {/* SEÇÃO 2 — HERO */}
-            <section ref={registerSection} id="hero" style={{ paddingTop: '160px', paddingBottom: '80px', paddingLeft: '32px', paddingRight: '32px', maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '64px' }}>
+            <section ref={registerSection} id="hero" style={{ paddingTop: '120px', paddingBottom: '60px', paddingLeft: '16px', paddingRight: '16px', maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '40px' }}>
                 <div className="flex flex-col lg:flex-row items-center gap-12 w-full">
                     <div style={{ flex: 1 }}>
                         {isPrelancamento && (
@@ -367,16 +367,16 @@ export default function LandingPage() {
                             text="Da inspiração ao lucro, tudo em um só ateliê."
                             style={{ fontFamily: 'Playfair Display, serif', fontSize: 'clamp(36px, 5vw, 64px)', color: darkColor, lineHeight: 1.1, marginBottom: '20px' }}
                         />
-                        <p style={{ fontSize: '20px', color: mutedColor, lineHeight: 1.6, margin: '0 0 32px 0', maxWidth: '540px' }}>
+                        <p style={{ fontSize: 'clamp(15px, 3.5vw, 20px)', color: mutedColor, lineHeight: 1.6, margin: '0 0 24px 0', maxWidth: '540px' }}>
                             Gere riscos exclusivos com IA em segundos, organize suas encomendas,
                             precifique com segurança e feche orçamentos sem sair do celular.
                             A plataforma que as bordadeiras brasileiras estavam esperando.
                         </p>
                         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                            <button onClick={handleCTA} style={{ background: primaryColor, color: 'white', padding: '16px 32px', borderRadius: '14px', fontWeight: 800, fontSize: '17px', boxShadow: '0 8px 32px rgba(172,81,72,0.35)', border: 'none', cursor: 'pointer' }}>
+                            <button onClick={handleCTA} style={{ background: primaryColor, color: 'white', padding: '14px 28px', borderRadius: '14px', fontWeight: 800, fontSize: 'clamp(14px, 3.5vw, 17px)', boxShadow: '0 8px 32px rgba(172,81,72,0.35)', border: 'none', cursor: 'pointer' }}>
                                 {isPrelancamento ? 'Garantir minha vaga' : 'Começar grátis'}
                             </button>
-                            <a href="#como-funciona" style={{ background: 'transparent', color: primaryColor, padding: '16px 24px', borderRadius: '14px', fontWeight: 700, fontSize: '16px', border: `2px solid rgba(172,81,72,0.3)`, cursor: 'pointer', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+                            <a href="#como-funciona" style={{ background: 'transparent', color: primaryColor, padding: '14px 20px', borderRadius: '14px', fontWeight: 700, fontSize: 'clamp(13px, 3.5vw, 16px)', border: `2px solid rgba(172,81,72,0.3)`, cursor: 'pointer', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
                                 Ver como funciona →
                             </a>
                         </div>
@@ -394,7 +394,7 @@ export default function LandingPage() {
                         </div>
                     </div>
                     <div style={{ flex: 1, position: 'relative', width: '100%' }}>
-                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '120%', paddingTop: '120%', borderRadius: '50%', border: `1px solid ${secondaryColor}`, opacity: 0.5, zIndex: 0 }} />
+                        <div className="hidden md:block" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '120%', paddingTop: '120%', borderRadius: '50%', border: `1px solid ${secondaryColor}`, opacity: 0.5, zIndex: 0 }} />
                         <div style={{ animation: 'float 6s ease-in-out infinite', position: 'relative', zIndex: 1 }}>
                             <BlurImage
                                 src="/mockup-gerador.png"
@@ -417,7 +417,7 @@ export default function LandingPage() {
             </div>
 
             {/* SEÇÃO 4 — O PROBLEMA */}
-            <section ref={registerSection} id="problema" style={{ background: darkColor, padding: '100px 32px' }}>
+            <section ref={registerSection} id="problema" style={{ background: darkColor, padding: '60px 16px' }}>
                 <div style={{ textAlign: 'center', marginBottom: '64px' }}>
                     <span style={{ background: 'rgba(222,209,129,0.15)', color: secondaryColor, padding: '6px 20px', borderRadius: '999px', fontSize: '13px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}>
                         Você se identifica?
@@ -472,8 +472,8 @@ export default function LandingPage() {
             </section>
 
             {/* SEÇÃO 5 — GERADOR DE RISCOS */}
-            <section ref={registerSection} id="gerador" style={{ background: bgColor, padding: '100px 32px' }}>
-                <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '80px', alignItems: 'center' }}>
+            <section ref={registerSection} id="gerador" style={{ background: bgColor, padding: '60px 16px' }}>
+                <div style={{ maxWidth: '1100px', margin: '0 auto' }} className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-center">
                     <div style={{ position: 'relative' }}>
                         <div style={{ background: 'white', borderRadius: '24px', boxShadow: '0 20px 60px rgba(28,20,16,0.12)', overflow: 'hidden', border: '1px solid #E5D9CC' }}>
                             <div style={{ padding: '14px 20px', borderBottom: '1px solid #F2E9DB', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -498,7 +498,7 @@ export default function LandingPage() {
                                 </div>
                             </div>
                         </div>
-                        <div style={{ position: 'absolute', top: '-20px', right: '-20px', background: primaryColor, color: 'white', borderRadius: '14px', padding: '12px 18px', boxShadow: '0 8px 24px rgba(172,81,72,0.4)', fontWeight: 800, fontSize: '13px', textAlign: 'center' }}>
+                        <div className="hidden sm:block" style={{ position: 'absolute', top: '-20px', right: '-20px', background: primaryColor, color: 'white', borderRadius: '14px', padding: '12px 18px', boxShadow: '0 8px 24px rgba(172,81,72,0.4)', fontWeight: 800, fontSize: '13px', textAlign: 'center' }}>
                             <div style={{ fontSize: '24px' }}>🎨</div>
                             <div>Exclusivo</div>
                             <div style={{ opacity: 0.8, fontSize: '11px' }}>só seu</div>
@@ -534,7 +534,7 @@ export default function LandingPage() {
             </section>
 
             {/* SEÇÃO 6 — FUNCIONALIDADES GRADE */}
-            <section ref={registerSection} id="funcionalidades" style={{ background: darkColor, padding: '100px 32px' }}>
+            <section ref={registerSection} id="funcionalidades" style={{ background: darkColor, padding: '60px 16px' }}>
                 <div style={{ textAlign: 'center', marginBottom: '64px' }}>
                     <span style={{ color: secondaryColor, fontSize: '13px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase' }}>
                         Tudo em um só lugar
@@ -564,7 +564,7 @@ export default function LandingPage() {
             </section>
 
             {/* SEÇÃO 7 — COMO FUNCIONA */}
-            <section ref={registerSection} id="como-funciona" style={{ background: bgColor, padding: '100px 32px' }}>
+            <section ref={registerSection} id="como-funciona" style={{ background: bgColor, padding: '60px 16px' }}>
                 <div style={{ textAlign: 'center', marginBottom: '64px' }}>
                     <h2 style={{ fontFamily: 'Playfair Display, serif', fontSize: 'clamp(32px, 4vw, 48px)', color: darkColor }}>Simples como deve ser</h2>
                     <p style={{ color: mutedColor, fontSize: '18px', maxWidth: '500px', margin: '16px auto 0' }}>Em menos de 5 minutos você já tem sua conta configurada e seu primeiro risco gerado.</p>
@@ -591,13 +591,13 @@ export default function LandingPage() {
             </section>
 
             {/* SEÇÃO 8 — DEPOIMENTOS FIXO */}
-            <section ref={registerSection} id="depoimentos" style={{ background: '#EDE0CF', padding: '100px 32px' }}>
+            <section ref={registerSection} id="depoimentos" style={{ background: '#EDE0CF', padding: '60px 16px' }}>
                 <div style={{ textAlign: 'center', marginBottom: '56px' }}>
                     <h2 style={{ fontFamily: 'Playfair Display, serif', fontSize: 'clamp(32px, 4vw, 44px)', color: darkColor }}>
                         Bordadeiras que<br /><em style={{ color: primaryColor }}>já transformaram</em> seu ateliê
                     </h2>
                 </div>
-                <div style={{ maxWidth: '600px', margin: '0 auto', background: 'white', borderRadius: '24px', padding: '36px', border: '1px solid #E5D9CC', position: 'relative', boxShadow: '0 4px 24px rgba(28,20,16,0.06)' }}>
+                <div style={{ maxWidth: '600px', margin: '0 auto', background: 'white', borderRadius: '24px', padding: '24px', border: '1px solid #E5D9CC', position: 'relative', boxShadow: '0 4px 24px rgba(28,20,16,0.06)' }}>
                     <div style={{ fontSize: '80px', color: bgColor, fontFamily: 'Georgia, serif', lineHeight: 1, position: 'absolute', top: '16px', left: '24px', userSelect: 'none' }}>"</div>
                     <div style={{ display: 'flex', gap: '4px', marginBottom: '20px', position: 'relative', zIndex: 1 }}>
                         {[1, 2, 3, 4, 5].map(s => <span key={s} style={{ color: accentColor, fontSize: '18px' }}>★</span>)}
@@ -618,7 +618,7 @@ export default function LandingPage() {
             </section>
 
             {/* SEÇÃO 9 — NÚMEROS */}
-            <section ref={registerSection} id="numeros" style={{ background: primaryColor, padding: '80px 32px' }}>
+            <section ref={registerSection} id="numeros" style={{ background: primaryColor, padding: '60px 16px' }}>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-[800px] mx-auto text-center divide-y md:divide-y-0 md:divide-x divide-white/20">
                     <div className="pt-8 md:pt-0">
                         <div ref={refBordados} style={{ fontFamily: 'Playfair Display, serif', fontSize: '56px', color: 'white', fontWeight: 700 }}>
@@ -642,13 +642,13 @@ export default function LandingPage() {
             </section>
 
             {/* SEÇÃO 10 — PLANOS */}
-            <section ref={registerSection} id="planos" style={{ background: bgColor, padding: '100px 32px' }}>
+            <section ref={registerSection} id="planos" style={{ background: bgColor, padding: '60px 16px' }}>
                 <div style={{ textAlign: 'center', marginBottom: '56px' }}>
                     {isPrelancamento && (
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(172,81,72,0.1)', border: '1px solid rgba(172,81,72,0.3)', borderRadius: '999px', padding: '8px 20px', marginBottom: '20px' }}>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(172,81,72,0.1)', border: '1px solid rgba(172,81,72,0.3)', borderRadius: '999px', padding: '8px 16px', marginBottom: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
                             <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: primaryColor, animation: 'pulse 2s infinite', display: 'block' }} />
-                            <span style={{ color: primaryColor, fontWeight: 800, fontSize: '13px' }}>
-                                🎁 Oferta de Fundadora · Apenas 15 vagas · R$77/mês para sempre
+                            <span style={{ color: primaryColor, fontWeight: 800, fontSize: 'clamp(11px, 3vw, 13px)', textAlign: 'center' }}>
+                                🎁 Oferta de Fundadora · 15 vagas · R$77/mês
                             </span>
                         </div>
                     )}
@@ -656,7 +656,7 @@ export default function LandingPage() {
                     <p style={{ color: mutedColor, fontSize: '18px', marginTop: '12px' }}>Uma assinatura que se paga com uma peça vendida a mais por mês.</p>
                 </div>
                 <div className="grid md:grid-cols-2 gap-8 max-w-[800px] mx-auto">
-                    <div style={{ background: 'white', borderRadius: '24px', padding: '36px', border: '1px solid #E5D9CC' }}>
+                    <div style={{ background: 'white', borderRadius: '24px', padding: '24px', border: '1px solid #E5D9CC' }}>
                         <h3 style={{ fontFamily: 'Playfair Display, serif', fontSize: '24px', color: darkColor, margin: '0 0 8px', fontWeight: 700 }}>Gratuito</h3>
                         <div style={{ marginBottom: '28px' }}>
                             <span style={{ fontSize: '48px', fontWeight: 800, color: darkColor }}>R$0</span>
@@ -671,7 +671,7 @@ export default function LandingPage() {
                             Criar Conta Grátis
                         </button>
                     </div>
-                    <div style={{ background: darkColor, borderRadius: '24px', padding: '36px', border: `2px solid ${primaryColor}`, position: 'relative', overflow: 'hidden' }}>
+                    <div style={{ background: darkColor, borderRadius: '24px', padding: '24px', border: `2px solid ${primaryColor}`, position: 'relative', overflow: 'hidden' }}>
                         <div style={{ position: 'absolute', top: '24px', right: '24px', background: primaryColor, color: 'white', padding: '4px 14px', borderRadius: '999px', fontSize: '12px', fontWeight: 800 }}>
                             {isPrelancamento ? '🎁 Fundadora' : '⭐ Mais popular'}
                         </div>
@@ -701,7 +701,7 @@ export default function LandingPage() {
             </section>
 
             {/* SEÇÃO 11 — FAQ ACCORDION SIMPLIFICADO */}
-            <section ref={registerSection} id="perguntas" style={{ background: 'white', padding: '100px 32px' }}>
+            <section ref={registerSection} id="perguntas" style={{ background: 'white', padding: '60px 16px' }}>
                 <div style={{ maxWidth: '680px', margin: '0 auto' }}>
                     <div style={{ textAlign: 'center', marginBottom: '48px' }}>
                         <h2 style={{ fontFamily: 'Playfair Display, serif', fontSize: 'clamp(28px, 4vw, 36px)', color: darkColor, fontWeight: 700 }}>Perguntas Frequentes</h2>
@@ -729,7 +729,7 @@ export default function LandingPage() {
 
             {/* SEÇÃO 12 — CTA FINAL & ESPERA */}
             {isPrelancamento && (
-                <section ref={registerSection} id="lista-espera" style={{ background: '#2D2D2D', padding: '100px 32px', textAlign: 'center' }}>
+                <section ref={registerSection} id="lista-espera" style={{ background: '#2D2D2D', padding: '60px 16px', textAlign: 'center' }}>
                     <span style={{ background: primaryColor, color: 'white', padding: '6px 16px', borderRadius: '999px', fontSize: '13px', fontWeight: 800 }}>
                         ✦ Lançamento em breve
                     </span>
@@ -757,7 +757,7 @@ export default function LandingPage() {
             )}
 
             {!isPrelancamento && (
-                <section ref={registerSection} id="cta-final" style={{ background: `linear-gradient(135deg, ${darkColor} 0%, #2D1F1A 100%)`, padding: '120px 32px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+                <section ref={registerSection} id="cta-final" style={{ background: `linear-gradient(135deg, ${darkColor} 0%, #2D1F1A 100%)`, padding: '80px 16px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
                     <div style={{ position: 'relative', zIndex: 1 }}>
                         <span style={{ color: secondaryColor, fontSize: '13px', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase' }}>É hora de mudar</span>
                         <WordReveal
@@ -773,8 +773,8 @@ export default function LandingPage() {
             )}
 
             {/* SEÇÃO 14 — FOOTER */}
-            <footer style={{ background: darkColor, padding: '80px 32px 40px', color: 'white' }}>
-                <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '48px', marginBottom: '64px' }}>
+            <footer style={{ background: darkColor, padding: '60px 16px 40px', color: 'white' }}>
+                <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '32px', marginBottom: '48px' }}>
                     <div>
                         <img src={platformLogo || '/logo.png'} alt="Logo" style={{ height: '50px', objectFit: 'contain', filter: 'brightness(0) invert(1)', marginBottom: '16px' }} />
                         <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px', lineHeight: 1.6 }}>Feito para artesãs e bordadeiras que querem valorizar seu trabalho e escalar seu negócio com tecnologia.</p>
