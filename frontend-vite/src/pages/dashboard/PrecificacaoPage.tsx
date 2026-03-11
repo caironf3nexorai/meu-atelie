@@ -60,7 +60,7 @@ export default function PrecificacaoPage() {
         <div className="max-w-6xl mx-auto space-y-6 pb-12">
             <div className="flex items-center justify-between mb-2">
                 <div>
-                    <h1 className="font-display text-4xl text-text">Precificação Inteligente</h1>
+                    <h1 className="font-display text-2xl sm:text-4xl text-text">Precificação Inteligente</h1>
                     <p className="font-ui text-text-light mt-2">Nunca mais perca no lucro. A matemática que valoriza sua arte associada com a nossa IA.</p>
                 </div>
             </div>
@@ -68,7 +68,7 @@ export default function PrecificacaoPage() {
             <div className="flex flex-col lg:flex-row gap-8">
                 {/* Esquerda: Calculadora */}
                 <div className="lg:w-1/2 space-y-6">
-                    <div className="bg-surface rounded-3xl p-8 border border-border-light shadow-sm">
+                    <div className="bg-surface rounded-3xl p-5 sm:p-8 border border-border-light shadow-sm">
                         <h2 className="font-display text-2xl text-text border-b border-border/50 pb-4 mb-6 flex items-center gap-2">
                             <Calculator className="w-5 h-5 text-primary" /> Variáveis Base
                         </h2>
@@ -159,18 +159,18 @@ export default function PrecificacaoPage() {
                     <motion.div
                         initial={{ scale: 0.95, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="bg-gradient-to-br from-primary-light/5 via-surface to-primary/5 rounded-3xl p-8 border border-primary-light/30 shadow-md relative overflow-hidden"
+                        className="bg-gradient-to-br from-primary-light/5 via-surface to-primary/5 rounded-3xl p-5 sm:p-8 border border-primary-light/30 shadow-md relative overflow-hidden"
                     >
                         <div className="absolute top-0 right-0 p-4 opacity-5">
                             <Calculator className="w-32 h-32" />
                         </div>
 
                         <p className="font-ui text-text-light uppercase tracking-wider text-sm mb-2 font-semibold">Preço Final Sugerido</p>
-                        <div className="font-display text-5xl text-text mb-6">
+                        <div className="font-display text-3xl sm:text-5xl text-text mb-6">
                             <span className="text-3xl text-text-muted">R$</span> {totalCalculado.toFixed(2)}
                         </div>
 
-                        <div className="flex gap-8 border-t border-primary-light/20 pt-6 mt-4 font-ui">
+                        <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 border-t border-primary-light/20 pt-6 mt-4 font-ui">
                             <div>
                                 <p className="text-text-muted text-sm mb-1">Custo Base</p>
                                 <p className="text-text font-medium text-lg">R$ {((Number(custoMaterial) || 0) + ((Number(horasTrabalho) || 0) * (Number(valorHora) || 0))).toFixed(2)}</p>

@@ -186,24 +186,24 @@ export default function FinanceiroPage() {
 
     return (
         <div className="max-w-5xl mx-auto pb-24 lg:pb-12 relative min-h-screen">
-            <div className="flex justify-between items-end mb-8 block sm:hidden">
-                <h1 className="font-display text-4xl text-text">Caixa</h1>
+            <div className="flex justify-between items-end mb-8 sm:hidden">
+                <h1 className="font-display text-3xl text-text">Caixa</h1>
             </div>
 
             <div className="grid sm:grid-cols-3 gap-4 mb-8">
                 <div className="bg-surface rounded-3xl p-6 border border-border-light shadow-sm relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-4 opacity-5"><TrendingUp className="w-24 h-24" /></div>
                     <p className="font-ui text-text-light text-sm mb-2 flex items-center gap-2">Receitas Mês <ArrowUpRight className="w-4 h-4 text-accent" /></p>
-                    <p className="font-display text-3xl text-text">R$ {monthlyReceitas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                    <p className="font-display text-xl sm:text-3xl text-text">R$ {monthlyReceitas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                 </div>
                 <div className="bg-surface rounded-3xl p-6 border border-border-light shadow-sm relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-4 opacity-5"><TrendingDown className="w-24 h-24" /></div>
                     <p className="font-ui text-text-light text-sm mb-2 flex items-center gap-2">Despesas Mês <ArrowDownRight className="w-4 h-4 text-warn" /></p>
-                    <p className="font-display text-3xl text-text">R$ {monthlyDespesas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                    <p className="font-display text-xl sm:text-3xl text-text">R$ {monthlyDespesas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                 </div>
                 <div className="bg-gradient-to-br from-primary-light/10 to-surface rounded-3xl p-6 border border-primary-light/30 shadow-sm">
                     <p className="font-ui text-text-light text-sm mb-2 flex items-center gap-2">Saldo Mês <DollarSign className="w-4 h-4 text-primary" /></p>
-                    <p className="font-display text-3xl text-primary-dark">R$ {(monthlyReceitas - monthlyDespesas).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                    <p className="font-display text-xl sm:text-3xl text-primary-dark">R$ {(monthlyReceitas - monthlyDespesas).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                 </div>
             </div>
 
@@ -220,7 +220,7 @@ export default function FinanceiroPage() {
                             </Tabs>
                         </div>
 
-                        <div className="h-[300px] w-full">
+                        <div className="h-[220px] sm:h-[300px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                     <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }} dy={10} />

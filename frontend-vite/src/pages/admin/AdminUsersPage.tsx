@@ -73,7 +73,7 @@ function PlanModal({ user, onClose, onRefresh }: { user: any, onClose: () => voi
 
     return (
         <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
-            <div className="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl relative font-ui text-[#2D2D2D]">
+            <div className="bg-white rounded-[2rem] p-5 sm:p-8 max-w-md w-full shadow-2xl relative font-ui text-[#2D2D2D]">
                 <button onClick={onClose} className="absolute top-6 right-6 text-[#2D2D2D]/50 hover:text-[#2D2D2D]">
                     <X className="w-5 h-5" />
                 </button>
@@ -249,7 +249,7 @@ export default function AdminUsersPage() {
         <div className="space-y-6 max-w-7xl mx-auto pb-16">
             <div className="flex flex-col justify-start items-start gap-4">
                 <div>
-                    <h1 className="font-display text-4xl text-text mb-2">Gerenciamento de Usuários</h1>
+                    <h1 className="font-display text-2xl sm:text-4xl text-text mb-2">Gerenciamento de Usuários</h1>
                     <p className="font-ui text-text-light text-base">Controle de acesso, permissões e análise da base de clientes.</p>
                 </div>
             </div>

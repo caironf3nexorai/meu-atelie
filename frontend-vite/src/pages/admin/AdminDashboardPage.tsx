@@ -236,7 +236,7 @@ export default function AdminDashboardPage() {
     return (
         <div className="max-w-6xl mx-auto space-y-8">
             <div>
-                <h1 className="font-display text-4xl text-text mb-2">Visão Geral</h1>
+                <h1 className="font-display text-2xl sm:text-4xl text-text mb-2">Visão Geral</h1>
                 <p className="font-ui text-text-light text-base">Indicadores operacionais e controle em tempo real do sistema.</p>
             </div>
 
@@ -282,7 +282,7 @@ export default function AdminDashboardPage() {
                                 </div>
                             </div>
                             <div>
-                                <p className="font-display text-4xl text-text leading-none mb-2">{m.value}</p>
+                                <p className="font-display text-2xl sm:text-4xl text-text leading-none mb-2">{m.value}</p>
                                 <div className={`font-ui text-sm text-text-light ${m.link !== '#' ? 'group-hover:text-primary transition-colors flex items-center gap-1' : ''}`}>
                                     {m.desc} {m.link !== '#' && <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />}
                                 </div>
@@ -307,7 +307,7 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="grid lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 bg-white p-8 rounded-3xl shadow-sm border border-border-light flex flex-col">
+                <div className="lg:col-span-2 bg-white p-5 sm:p-8 rounded-3xl shadow-sm border border-border-light flex flex-col">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-8">
                         <h3 className="font-display text-2xl text-text">Novos Cadastros</h3>
                         <div className="flex gap-1 bg-stone-100 p-1 rounded-xl">
@@ -327,7 +327,7 @@ export default function AdminDashboardPage() {
                             ))}
                         </div>
                     </div>
-                    <div className="flex-1 min-h-[300px] w-full">
+                    <div className="flex-1 min-h-[240px] sm:min-h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--color-text-muted)', fontSize: 13 }} dy={10} />

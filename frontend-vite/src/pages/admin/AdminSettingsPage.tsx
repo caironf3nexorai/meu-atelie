@@ -167,14 +167,14 @@ export default function AdminSettingsPage() {
     return (
         <div className="max-w-4xl mx-auto space-y-12 pb-16">
             <div>
-                <h1 className="font-display text-4xl text-text mb-2">Configurações Gerais</h1>
+                <h1 className="font-display text-2xl sm:text-4xl text-text mb-2">Configurações Gerais</h1>
                 <p className="font-ui text-text-light text-base">Controle a identidade visual e as regras de limites limitantes dos planos.</p>
             </div>
 
             <div className="bg-white rounded-[2rem] border border-border-light shadow-sm overflow-hidden divide-y divide-border/50">
 
                 {/* IDENTIDADE */}
-                <section className="p-8 space-y-8">
+                <section className="p-5 sm:p-8 space-y-8">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                             <ImageIcon className="w-5 h-5 text-primary" />
@@ -208,7 +208,7 @@ export default function AdminSettingsPage() {
                 </section>
 
                 {/* PRÉ-LANÇAMENTO & WAITLIST */}
-                <section className="p-8 space-y-8">
+                <section className="p-5 sm:p-8 space-y-8">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                             <span className="text-xl">🚀</span>
@@ -255,7 +255,7 @@ export default function AdminSettingsPage() {
                 </section>
 
                 {/* LIMITES E PREÇOS */}
-                <section className="p-8 space-y-8">
+                <section className="p-5 sm:p-8 space-y-8">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
                             <Settings2 className="w-5 h-5 text-accent" />
@@ -310,7 +310,7 @@ export default function AdminSettingsPage() {
                 </section>
 
                 {/* CUSTOS DE IA (GEMINI) */}
-                <section className="p-8 space-y-8">
+                <section className="p-5 sm:p-8 space-y-8">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                             <Settings2 className="w-5 h-5 text-primary" />
@@ -340,11 +340,11 @@ export default function AdminSettingsPage() {
                     </div>
                 </section>
 
-                <div className="p-8 bg-surface-warm/30 flex justify-end">
+                <div className="p-5 sm:p-8 bg-surface-warm/30 flex justify-end">
                     <Dialog>
                         <DialogTrigger asChild>
-                            <Button disabled={saving} className="bg-primary hover:bg-primary-dark text-white rounded-xl h-14 px-10 shadow-md font-semibold font-ui text-lg transition-all active:scale-95">
-                                {saving ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : <><Save className="w-5 h-5 mr-3" /> Salvar Configurações Globais</>}
+                            <Button disabled={saving} className="bg-primary hover:bg-primary-dark text-white rounded-xl h-12 sm:h-14 px-6 sm:px-10 shadow-md font-semibold font-ui text-sm sm:text-lg transition-all active:scale-95 w-full sm:w-auto">
+                                {saving ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : <><Save className="w-5 h-5 mr-2 sm:mr-3" /> <span className="hidden sm:inline">Salvar Configurações Globais</span><span className="sm:hidden">Salvar</span></>}
                             </Button>
                         </DialogTrigger>
                         <DialogContent className="rounded-3xl bg-surface border-border-light">

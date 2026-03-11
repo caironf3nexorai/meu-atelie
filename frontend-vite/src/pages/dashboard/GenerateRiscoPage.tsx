@@ -230,7 +230,7 @@ export default function RiscoPage() {
     return (
         <div className="max-w-3xl mx-auto">
             <div className="mb-8">
-                <h1 className="font-display text-4xl text-text mb-4">Gerador de Risco</h1>
+                <h1 className="font-display text-2xl sm:text-4xl text-text mb-4">Gerador de Risco</h1>
                 <div className="flex items-center gap-4">
                     <Progress value={step * 33.33} className="h-2 bg-border-light [&>div]:bg-primary flex-1" />
                     <span className="text-sm font-ui text-text-muted whitespace-nowrap">Passo {step} de 3</span>
@@ -240,7 +240,7 @@ export default function RiscoPage() {
             <AnimatePresence mode="wait">
                 {step === 1 && (
                     <motion.div key="step1" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}>
-                        <div className="bg-surface rounded-3xl p-8 border border-border-light shadow-sm text-center">
+                        <div className="bg-surface rounded-3xl p-5 sm:p-8 border border-border-light shadow-sm text-center">
 
                             <div style={{ display: 'flex', gap: '8px', background: '#F2E9DB', padding: '6px', borderRadius: '14px', marginBottom: '24px' }}>
                                 <button
@@ -356,7 +356,7 @@ export default function RiscoPage() {
 
                 {step === 2 && (
                     <motion.div key="step2" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}>
-                        <div className="bg-surface rounded-3xl p-8 border border-border-light shadow-sm">
+                        <div className="bg-surface rounded-3xl p-5 sm:p-8 border border-border-light shadow-sm">
                             <h2 className="font-display text-2xl text-text mb-2">Como você quer o risco?</h2>
                             <p className="font-ui text-text-light mb-6">Personalize o estilo das linhas para combinar com a sua técnica de bordado.</p>
 
@@ -468,13 +468,13 @@ export default function RiscoPage() {
                                 )}
                             </div>
 
-                            <div className="flex items-center justify-between mt-8 border-t border-border/50 pt-6">
-                                <Button variant="ghost" onClick={() => setStep(1)} className="text-text-light hover:text-text rounded-full px-6">
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between mt-8 border-t border-border/50 pt-6 gap-4">
+                                <Button variant="ghost" onClick={() => setStep(1)} className="text-text-light hover:text-text rounded-full px-6 order-2 sm:order-1">
                                     Voltar
                                 </Button>
-                                <div className="flex items-center gap-4">
+                                <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 order-1 sm:order-2">
                                     <span className="text-sm font-ui text-text-muted">Custo: <span className="font-semibold text-warn">1 Geração</span></span>
-                                    <Button onClick={handleGenerate} className="rounded-full px-8 bg-primary hover:bg-primary-dark shadow-md text-base h-12">
+                                    <Button onClick={handleGenerate} className="rounded-full px-8 bg-primary hover:bg-primary-dark shadow-md text-base h-12 w-full sm:w-auto">
                                         Gerar Magia <Wand2 className="w-4 h-4 ml-2" />
                                     </Button>
                                 </div>
@@ -486,7 +486,7 @@ export default function RiscoPage() {
                 {step === 3 && (
                     <motion.div key="step3" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
                         {isGenerating ? (
-                            <div className="bg-surface rounded-3xl p-16 border border-border-light shadow-sm text-center flex flex-col items-center justify-center min-h-[400px]">
+                            <div className="bg-surface rounded-3xl p-8 sm:p-16 border border-border-light shadow-sm text-center flex flex-col items-center justify-center min-h-[300px] sm:min-h-[400px]">
                                 <div className="relative mb-8">
                                     <div className="w-24 h-24 border-4 border-dashed border-primary-light rounded-full animate-[spin_4s_linear_infinite]" />
                                     <div className="absolute inset-0 flex items-center justify-center text-primary">

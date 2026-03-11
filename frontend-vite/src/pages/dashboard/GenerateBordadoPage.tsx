@@ -212,7 +212,7 @@ export default function BordadoColoridoPage() {
         <div className="max-w-4xl mx-auto pb-12 px-4 sm:px-0">
             <div className="mb-8 relative">
                 <Badge className="absolute -top-3 -right-2 bg-primary text-white border-0 z-10 shadow-sm">⚡ 1 Crédito</Badge>
-                <h1 className="font-display text-4xl text-text mb-2">Gerar Bordado Colorido <span className="text-xl">✨</span></h1>
+                <h1 className="font-display text-2xl sm:text-4xl text-text mb-2">Gerar Bordado Colorido <span className="text-xl">✨</span></h1>
                 <p className="font-ui text-text-light mb-6">Descreva sua ideia e nós criamos o risco perfeito, com pontos texturizados simulados em cores.</p>
 
                 <div className="flex gap-2">
@@ -472,7 +472,7 @@ export default function BordadoColoridoPage() {
                 {step === 4 && (
                     <motion.div key="step4" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                         {isGenerating ? (
-                            <div className="bg-surface rounded-3xl p-10 md:p-16 border border-border-light shadow-sm text-center flex flex-col items-center justify-center min-h-[400px]">
+                            <div className="bg-surface rounded-3xl p-10 md:p-16 border border-border-light shadow-sm text-center flex flex-col items-center justify-center min-h-[300px] sm:min-h-[400px]">
                                 <div className="relative mb-8 text-primary">
                                     <div className="w-24 h-24 border-y-4 border-primary-light rounded-full animate-spin" />
                                     <div className="absolute inset-0 flex items-center justify-center">

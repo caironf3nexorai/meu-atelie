@@ -155,3 +155,62 @@
   transform: none !important;
   filter: none !important;
 }
+
+/* ========================================= */
+/* === GLOBAL MOBILE RESPONSIVENESS FIXES === */
+/* ========================================= */
+
+/* Prevent any horizontal scroll on the entire app */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Dialog/Modal: full-width on mobile with proper padding */
+@media (max-width: 639px) {
+  [role="dialog"],
+  [data-radix-popper-content-wrapper] [role="dialog"] {
+    max-width: calc(100vw - 32px) !important;
+    width: calc(100vw - 32px) !important;
+    padding: 20px !important;
+    border-radius: 20px !important;
+    margin: 16px !important;
+  }
+
+  /* DialogFooter stacking on mobile */
+  [role="dialog"] footer,
+  [role="dialog"] [class*="DialogFooter"] {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  [role="dialog"] footer button,
+  [role="dialog"] [class*="DialogFooter"] button {
+    width: 100% !important;
+  }
+
+  /* Admin sections: reduce padding on mobile */
+  .admin-section {
+    padding: 20px !important;
+  }
+}
+
+/* No-scrollbar utility */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Scroll container for horizontal tabs */
+.scroll-x-tabs {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scroll-x-tabs::-webkit-scrollbar {
+  display: none;
+}

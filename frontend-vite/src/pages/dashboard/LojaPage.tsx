@@ -42,7 +42,7 @@ export default function StorePage() {
                     <Link to="/dashboard"><ArrowLeft className="w-5 h-5" /></Link>
                 </Button>
                 <div>
-                    <h1 className="font-display text-3xl text-text">Loja de Fios (Créditos)</h1>
+                    <h1 className="font-display text-2xl sm:text-3xl text-text">Loja de Fios (Créditos)</h1>
                     <p className="font-ui text-text-light">Seus créditos mensais acabaram? Adquira pacotes avulsos que <strong className="text-primary">nunca expiram</strong>.</p>
                 </div>
             </div>
@@ -54,7 +54,7 @@ export default function StorePage() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.1 }}
-                        className={`relative flex flex-col p-8 rounded-3xl border-2 bg-surface transition-all hover:-translate-y-2 hover:shadow-xl ${pkg.name === 'Pacote Popular' ? 'border-primary shadow-lg ring-4 ring-primary/10 scale-105' : 'border-border-light hover:border-primary/50'}`}
+                        className={`relative flex flex-col p-5 sm:p-8 rounded-3xl border-2 bg-surface transition-all hover:-translate-y-2 hover:shadow-xl ${pkg.name === 'Pacote Popular' ? 'border-primary shadow-lg ring-4 ring-primary/10 sm:scale-105' : 'border-border-light hover:border-primary/50'}`}
                     >
                         {pkg.credit_amount === 30 && (
                             <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-white border-0 px-3 py-1 shadow-sm uppercase tracking-wider text-xs">
@@ -111,7 +111,7 @@ export default function StorePage() {
                 ))}
             </div>
 
-            <section className="mt-16 bg-surface-warm/50 rounded-3xl p-8 border border-border-light text-center">
+            <section className="mt-16 bg-surface-warm/50 rounded-3xl p-5 sm:p-8 border border-border-light text-center">
                 <PackageOpen className="w-12 h-12 text-primary-light mx-auto mb-4" />
                 <h3 className="font-display text-2xl text-text mb-2">Já pensou em ser assinante?</h3>
                 <p className="font-ui text-text-light mb-6 max-w-xl mx-auto">

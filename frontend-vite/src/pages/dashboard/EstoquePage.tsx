@@ -146,7 +146,7 @@ export default function EstoquePage() {
         <div className="max-w-6xl mx-auto space-y-8 pb-12">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="font-display text-3xl text-text">Estoque e Insumos</h1>
+                    <h1 className="font-display text-2xl sm:text-3xl text-text">Estoque e Insumos</h1>
                     <p className="font-ui text-text-light">Controle os materiais do seu ateliê e previna faltas.</p>
                 </div>
             </div>
@@ -270,7 +270,7 @@ export default function EstoquePage() {
                                                             <span className={isLow ? 'text-warn-dark font-medium' : ''}>Disp: {item.quantity} {item.unit}</span>
                                                         </div>
                                                     </div>
-                                                    <div className="flex justify-end gap-2 items-center">
+                                                    <div className="flex flex-wrap justify-end gap-2 items-center">
                                                         <Button variant="outline" size="sm" onClick={() => { setSelectedItemForRepor(item); setIsReporOpen(true); }} className="text-sm h-8 border-primary text-primary hover:bg-[#FDF0F0] hover:text-primary mr-2">
                                                             <RefreshCw className="w-3 h-3 mr-1" /> Repor
                                                         </Button>
@@ -290,7 +290,7 @@ export default function EstoquePage() {
                     </div>
                 </TabsContent>
 
-                <TabsContent value="historico" className="bg-surface border border-border-light rounded-2xl shadow-sm p-6 overflow-hidden min-h-[400px]">
+                <TabsContent value="historico" className="bg-surface border border-border-light rounded-2xl shadow-sm p-4 sm:p-6 overflow-hidden min-h-[400px]">
                     <h3 className="text-lg font-display text-text mb-4">Registro de Movimentações</h3>
                     {movements.length === 0 ? (
                         <div className="text-center py-12 text-text-light font-ui">

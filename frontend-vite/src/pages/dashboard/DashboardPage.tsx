@@ -92,7 +92,7 @@ export default function DashboardPage() {
             {/* Hero Section */}
             <section className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div className="space-y-2">
-                    <h1 className="font-display text-4xl text-text">
+                    <h1 className="font-display text-3xl sm:text-4xl text-text">
                         Olá, {userName} <span className="inline-block animate-wave">👋</span>
                     </h1>
                     <p className="font-ui text-text-light text-lg">Pronta para transformar linhas em arte hoje?</p>
@@ -133,7 +133,7 @@ export default function DashboardPage() {
             {/* Primary Actions */}
             <section className="grid md:grid-cols-2 gap-6">
                 <motion.div whileHover={{ y: -4, boxShadow: 'var(--shadow-md)' }} className="transition-all">
-                    <Link to="/gerar/risco" className="block relative overflow-hidden rounded-[24px] bg-gradient-to-br from-surface to-primary-light/10 border border-primary-light/20 p-8 h-full group">
+                    <Link to="/gerar/risco" className="block relative overflow-hidden rounded-[24px] bg-gradient-to-br from-surface to-primary-light/10 border border-primary-light/20 p-5 sm:p-8 h-full group">
                         <div className="w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mb-6">
                             <ImageIcon className="w-6 h-6" />
                         </div>
@@ -148,7 +148,7 @@ export default function DashboardPage() {
                 </motion.div>
 
                 <motion.div whileHover={{ y: -4, boxShadow: 'var(--shadow-md)' }} className="transition-all h-full">
-                    <Link to="/gerar/bordado-colorido" className="block relative overflow-hidden rounded-[24px] bg-gradient-to-br from-surface to-primary-light/10 border border-primary-light/20 p-8 h-full group">
+                    <Link to="/gerar/bordado-colorido" className="block relative overflow-hidden rounded-[24px] bg-gradient-to-br from-surface to-primary-light/10 border border-primary-light/20 p-5 sm:p-8 h-full group">
                         <div className="w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mb-6">
                             <Paintbrush className="w-6 h-6" />
                         </div>
