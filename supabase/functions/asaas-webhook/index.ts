@@ -61,7 +61,8 @@ serve(async (req) => {
                     user_id: userId,
                     titulo: '✅ Pagamento confirmado!',
                     mensagem: 'Seu plano Premium foi ativado. Aproveite todas as funcionalidades!',
-                    tipo: 'success'
+                    tipo: 'success',
+                    link: '/financeiro'
                 })
 
                 break
@@ -88,7 +89,8 @@ serve(async (req) => {
                         user_id: userId,
                         titulo: '⚠️ Pagamento não identificado',
                         mensagem: 'Não identificamos seu pagamento. Seu plano foi alterado para Free. Renove para continuar com acesso Premium.',
-                        tipo: 'warning'
+                        tipo: 'warning',
+                        link: '/dashboard/assinar'
                     })
                 }
                 break

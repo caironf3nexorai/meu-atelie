@@ -133,18 +133,20 @@ export function Sidebar() {
                 <div className="shrink-0 pt-2 pb-4 px-4 border-t border-black/10 bg-[#DED181] shadow-[0_-6px_16px_rgba(0,0,0,0.06)] z-10">
                     <span className="text-[10px] font-bold text-[#2D2D2D]/60 tracking-wider uppercase ml-2 mb-2 block">Conta</span>
                     <div className="space-y-0.5 mb-3">
-                        <Link to="/perfil" className={cn(
-                            'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 font-ui text-sm group text-left relative',
-                            pathname.startsWith('/perfil')
-                                ? 'bg-[#AC5148] text-white font-medium shadow-sm'
-                                : 'text-[#2D2D2D] hover:bg-[#C9BC6A] hover:text-[#2D2D2D]'
-                        )}>
-                            <User className={cn("w-4 h-4 shrink-0", pathname.startsWith('/perfil') ? 'text-white' : 'text-[#2D2D2D]/70 group-hover:text-[#2D2D2D]')} />
-                            <span className="flex-1">Meu Perfil</span>
-                            <div className="flex shrink-0">
+                        <div className="flex items-center gap-2 w-full">
+                            <Link to="/perfil" className={cn(
+                                'flex-1 flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 font-ui text-sm group text-left relative',
+                                pathname.startsWith('/perfil')
+                                    ? 'bg-[#AC5148] text-white font-medium shadow-sm'
+                                    : 'text-[#2D2D2D] hover:bg-[#C9BC6A] hover:text-[#2D2D2D]'
+                            )}>
+                                <User className={cn("w-4 h-4 shrink-0", pathname.startsWith('/perfil') ? 'text-white' : 'text-[#2D2D2D]/70 group-hover:text-[#2D2D2D]')} />
+                                <span className="flex-1">Meu Perfil</span>
+                            </Link>
+                            <div className="flex shrink-0 h-full items-center justify-center pr-2">
                                 <NotificationBell />
                             </div>
-                        </Link>
+                        </div>
 
                         {role === 'admin' && (
                             <Link to="/admin" className={cn(
