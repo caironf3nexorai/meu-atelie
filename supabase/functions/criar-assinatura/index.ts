@@ -196,10 +196,15 @@ serve(async (req) => {
                     { headers }
                 )
                 const pix = await pixRes.json()
-                pixData = {
-                    encodedImage: pix.encodedImage, // QR Code base64
-                    payload: pix.payload,           // Pix copia-e-cola
-                    expirationDate: pix.expirationDate
+                
+                if (pix.success) {
+                    pixData = {
+                        encodedImage: pix.encodedImage, // QR Code base64
+                        payload: pix.payload,           // Pix copia-e-cola
+                        expirationDate: pix.expirationDate
+                    }
+                } else {
+                    console.log('Erro ao gerar PIX QRCode interno:', JSON.stringify(pix))
                 }
             }
 
@@ -214,7 +219,6 @@ serve(async (req) => {
             await supabase.from('profiles').update({
                 asaas_subscription_id: subscription.id,
                 asaas_customer_id: customerId,
-                plan: 'free', // mantém free até confirmação do webhook
                 pending_payment_method: subscriptionBody.billingType
             }).eq('id', user_id)
 
