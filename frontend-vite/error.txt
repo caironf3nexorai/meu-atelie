@@ -1,0 +1,72 @@
+﻿
+> frontend-vite@0.0.0 build
+> tsc -b && vite build
+
+[36mvite v7.3.1 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32mÔ£ô[39m 3 modules transformed.
+node.exe : 
+[31mÔ£ù[39m Build 
+failed in 491ms
+No linha:1 caractere:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: ([31mÔ£ù[39m   
+  Build failed in 4    
+91ms:String) [], R    
+emoteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+[31merror during 
+build:
+[31mCould not resolve 
+"./styles/index.css" 
+from 
+"src/main.tsx"[31m
+file: 
+[36mC:/Users/Cairon Fe
+lipe/.gemini/antigravit
+y/Projeto Suelen/fronte
+nd-vite/src/main.tsx[3
+1m
+    at getRollupError (
+file:///C:/Users/Cairon
+%20Felipe/.gemini/antig
+ravity/Projeto%20Suelen
+/frontend-vite/node_mod
+ules/rollup/dist/es/sha
+red/parseAst.js:402:41)
+    at error (file:///C
+:/Users/Cairon%20Felipe
+/.gemini/antigravity/Pr
+ojeto%20Suelen/frontend
+-vite/node_modules/roll
+up/dist/es/shared/parse
+Ast.js:398:42)
+    at ModuleLoader.han
+dleInvalidResolvedId (f
+ile:///C:/Users/Cairon%
+20Felipe/.gemini/antigr
+avity/Projeto%20Suelen/
+frontend-vite/node_modu
+les/rollup/dist/es/shar
+ed/node-entry.js:21710:
+24)
+    at file:///C:/Users
+/Cairon%20Felipe/.gemin
+i/antigravity/Projeto%2
+0Suelen/frontend-vite/n
+ode_modules/rollup/dist
+/es/shared/node-entry.j
+s:21670:26[39m

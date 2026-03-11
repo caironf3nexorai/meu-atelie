@@ -1,0 +1,133 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+@layer base {
+  :root {
+    --color-primary: #C97B84;
+    /* Rosa antigo */
+    --color-primary-light: #E8B4BA;
+    --color-primary-dark: #A85F68;
+    --color-accent: #8B9E6E;
+    /* Verde sage */
+    --color-accent-light: #B5C9A0;
+    --color-warn: #E07B54;
+    /* Terracota */
+    --color-background: #FAF7F2;
+    /* Creme */
+    --color-surface: #FFFFFF;
+    --color-surface-warm: #FDF5EE;
+    /* Creme mais quente para cards */
+    --color-text: #3D2B2B;
+    /* Marrom escuro */
+    --color-text-light: #7A6060;
+    --color-text-muted: #B09090;
+    --color-border: #EDE0D8;
+    --color-border-light: #F5ECE6;
+
+    --font-display: 'Playfair Display', serif;
+    --font-ui: 'Nunito', sans-serif;
+
+    --radius-sm: 8px;
+    --radius-md: 16px;
+    --radius-lg: 24px;
+    --radius-xl: 32px;
+
+    --shadow-sm: 0 2px 8px rgba(61, 43, 43, 0.06);
+    --shadow-md: 0 4px 20px rgba(61, 43, 43, 0.10);
+    --shadow-lg: 0 8px 40px rgba(61, 43, 43, 0.14);
+
+    /* Variaveis herdadas pelo shadcn por retrocompatibilidade se desejarmos manter o HSL, mas mesclaremos ao root principal no tailwind.config */
+    --background: 41 40% 96%;
+    /* #FAF7F2 hsl */
+    --foreground: 0 17% 20%;
+    /* #3D2B2B hsl */
+
+    --card: 30 67% 96%;
+    /* #FDF5EE hsl */
+    --card-foreground: 0 17% 20%;
+
+    --popover: 30 67% 96%;
+    --popover-foreground: 0 17% 20%;
+
+    --primary: 353 39% 63%;
+    /* #C97B84 */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 85 24% 53%;
+    /* #8B9E6E */
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 21 44% 96%;
+    /* #F5ECE6 */
+    --muted-foreground: 0 17% 62%;
+    /* #B09090 */
+
+    --accent: 85 24% 53%;
+    /* #8B9E6E */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 17 68% 60%;
+    /* #E07B54 */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 24 37% 89%;
+    /* #EDE0D8 */
+    --input: 24 37% 89%;
+    --ring: 353 39% 63%;
+    /* #C97B84 */
+
+    --radius: var(--radius-md);
+  }
+
+  .dark {
+    /* Desativando Dark Mode (Fixado em Light por design da plataforma de bordado) */
+    --background: 41 40% 96%;
+    --foreground: 0 17% 20%;
+    --card: 30 67% 96%;
+    --card-foreground: 0 17% 20%;
+    --popover: 30 67% 96%;
+    --popover-foreground: 0 17% 20%;
+    --primary: 353 39% 63%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 85 24% 53%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 21 44% 96%;
+    --muted-foreground: 0 17% 62%;
+    --accent: 85 24% 53%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 17 68% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 24 37% 89%;
+    --input: 24 37% 89%;
+    --ring: 353 39% 63%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-ui selection:bg-primary-light selection:text-foreground;
+    background-color: var(--color-background);
+    color: var(--color-text);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+    font-weight: 500;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}

@@ -1,0 +1,157 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-primary: #AC5148;
+    --color-primary-hover: #8E3F37;
+    --color-secondary: #DED181;
+    --color-secondary-hover: #C9BC6A;
+    --color-accent: #C29A51;
+    --color-background: #F2E9DB;
+    --color-surface: #FFFFFF;
+    --color-text-primary: #1A1A1A;
+    --color-text-secondary: #6B6B6B;
+    --color-border: #E5D9CC;
+    --color-success: #2D7A4F;
+    --color-error: #C0392B;
+    --color-warning: #C29A51;
+
+    /* Variações auxiliares para legados do Tailwind */
+    --color-surface-warm: #FAF8F5;
+    --color-border-light: #F0E8DD;
+    --color-text-muted: #A3A3A3;
+
+    --font-display: 'Playfair Display', serif;
+    --font-ui: 'Nunito', sans-serif;
+
+    --radius-sm: 8px;
+    --radius-md: 16px;
+    --radius-lg: 24px;
+    --radius-xl: 32px;
+
+    --shadow-sm: 0 2px 8px rgba(26, 26, 26, 0.06);
+    --shadow-md: 0 4px 20px rgba(26, 26, 26, 0.10);
+    --shadow-lg: 0 8px 40px rgba(26, 26, 26, 0.14);
+
+    /* Variaveis HSL base fallback/shadcn */
+    --background: 41 40% 96%;
+    --foreground: 0 0% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+    --primary: 6 41% 48%;
+    /* #AC5148 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 56 57% 68%;
+    /* #DED181 */
+    --secondary-foreground: 0 0% 17%;
+    /* #2D2D2D */
+    --muted: 33 46% 90%;
+    --muted-foreground: 0 0% 42%;
+    --accent: 43 47% 54%;
+    /* #C29A51 */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 4 64% 46%;
+    /* #C0392B */
+    --destructive-foreground: 0 0% 100%;
+    --border: 31 35% 85%;
+    /* #E5D9CC */
+    --input: 31 35% 85%;
+    --ring: 6 41% 48%;
+
+    --radius: var(--radius-md);
+  }
+
+  .dark {
+    /* Desativando Dark Mode (Fixado em Light por design da plataforma de bordado) */
+    --background: 41 40% 96%;
+    --foreground: 0 17% 20%;
+    --card: 30 67% 96%;
+    --card-foreground: 0 17% 20%;
+    --popover: 30 67% 96%;
+    --popover-foreground: 0 17% 20%;
+    --primary: 353 39% 63%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 85 24% 53%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 21 44% 96%;
+    --muted-foreground: 0 17% 62%;
+    --accent: 85 24% 53%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 17 68% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 24 37% 89%;
+    --input: 24 37% 89%;
+    --ring: 353 39% 63%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-ui selection:bg-primary-light selection:text-foreground;
+    background-color: var(--color-background);
+    color: var(--color-text);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+    font-weight: 500;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .animate-blur-up,
+  .animate-float,
+  .animate-marquee {
+    animation: none !important;
+    opacity: 1 !important;
+    filter: blur(0) !important;
+    transform: none !important;
+  }
+
+  [data-section],
+  [data-section].section-visible,
+  [data-section].section-exit {
+    transition: opacity 0.3s ease;
+    transform: none;
+    filter: none;
+  }
+}
+
+/* ------------------------------------- */
+/* --- LIFECYCLE SCROLL REVEAL (LENIS) -- */
+/* ------------------------------------- */
+
+[data-section] {
+  /* JS aplica direto os valores calculados para ser fluido */
+  will-change: opacity, transform, filter;
+  backface-visibility: hidden;
+  /* evita flickering no resize */
+  -webkit-backface-visibility: hidden;
+}
+
+/* O hero começa visível sem efeito restritivo */
+[data-section="hero"] {
+  opacity: 1 !important;
+  transform: none !important;
+  filter: none !important;
+}
