@@ -42,6 +42,7 @@ export default function RegisterPage() {
 
     // --- Sistema de convite ---
     const [conviteValido, setConviteValido] = useState(false);
+    const [conviteData, setConviteData] = useState<any>(null);
     const [verificandoConvite, setVerificandoConvite] = useState(true);
 
     // Default defaultValues pra evitar warning de uncontrolled inputs
@@ -87,6 +88,7 @@ export default function RegisterPage() {
                 .single();
 
             setConviteValido(!!convite);
+            if (convite) setConviteData(convite);
             setVerificandoConvite(false);
         };
 
@@ -144,6 +146,19 @@ export default function RegisterPage() {
         }
 
         if (authData.user) {
+            let planUpdates: any = {};
+            if (conviteData && conviteData.plan_type === 'premium') {
+                const months = conviteData.premium_duration_months || 12;
+                const expiresAt = new Date();
+                expiresAt.setMonth(expiresAt.getMonth() + months);
+                
+                planUpdates = {
+                    plan: 'premium',
+                    premium_starts_at: new Date().toISOString(),
+                    premium_expires_at: expiresAt.toISOString(),
+                };
+            }
+
             // 2. Atualizar o profile criado pelo trigger do banco
             const { error: profileError } = await supabase.from('profiles').update({
                 cpf: data.cpf,
@@ -155,7 +170,8 @@ export default function RegisterPage() {
                 address_state: data.state,
                 address_zip: data.zip,
                 aceitou_termos: true,
-                termos_aceitos_em: new Date().toISOString()
+                termos_aceitos_em: new Date().toISOString(),
+                ...planUpdates
             }).eq('id', authData.user.id);
 
             if (profileError) {

@@ -15,6 +15,8 @@ export default function AdminConvitesPage() {
     const [loading, setLoading] = useState(true);
     const [emailDestino, setEmailDestino] = useState('');
     const [gerando, setGerando] = useState(false);
+    const [planType, setPlanType] = useState<'free' | 'premium'>('free');
+    const [premiumDuration, setPremiumDuration] = useState('12');
 
     const fetchConvites = async () => {
         setLoading(true);
@@ -41,6 +43,8 @@ export default function AdminConvitesPage() {
             .insert({
                 code,
                 email: emailDestino?.trim() || null,
+                plan_type: planType,
+                premium_duration_months: planType === 'premium' ? parseInt(premiumDuration) : null,
                 created_by: user.id
             });
 
@@ -60,6 +64,8 @@ export default function AdminConvitesPage() {
         }
 
         setEmailDestino('');
+        setPlanType('free');
+        setPremiumDuration('12');
         setGerando(false);
         fetchConvites();
     };
@@ -92,6 +98,29 @@ export default function AdminConvitesPage() {
                         onChange={e => setEmailDestino(e.target.value)}
                         className="flex-1 h-12 rounded-xl"
                     />
+                    <select
+                        value={planType}
+                        onChange={e => setPlanType(e.target.value as 'free' | 'premium')}
+                        className="h-12 rounded-xl px-4 border border-border bg-background text-text focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                        <option value="free">Plano Free</option>
+                        <option value="premium">Plano Premium</option>
+                    </select>
+
+                    {planType === 'premium' && (
+                        <select
+                            value={premiumDuration}
+                            onChange={e => setPremiumDuration(e.target.value)}
+                            className="h-12 rounded-xl px-4 border border-border bg-background text-text focus:outline-none focus:ring-2 focus:ring-primary"
+                        >
+                            <option value="1">1 Mês (Teste)</option>
+                            <option value="3">3 Meses (Trimestral)</option>
+                            <option value="6">6 Meses (Semestral)</option>
+                            <option value="12">12 Meses (Anual)</option>
+                            <option value="120">Vitalício</option>
+                        </select>
+                    )}
+
                     <Button
                         onClick={gerarConvite}
                         disabled={gerando}
@@ -126,6 +155,7 @@ export default function AdminConvitesPage() {
                             <tr>
                                 <th className="p-4 pl-6 font-ui text-xs font-bold text-text-muted uppercase tracking-wider">Código</th>
                                 <th className="p-4 font-ui text-xs font-bold text-text-muted uppercase tracking-wider">Email</th>
+                                <th className="p-4 font-ui text-xs font-bold text-text-muted uppercase tracking-wider">Plano</th>
                                 <th className="p-4 font-ui text-xs font-bold text-text-muted uppercase tracking-wider">Status</th>
                                 <th className="p-4 font-ui text-xs font-bold text-text-muted uppercase tracking-wider">Usado em</th>
                                 <th className="p-4 pr-6 font-ui text-xs font-bold text-text-muted uppercase tracking-wider text-right">Ação</th>
@@ -140,6 +170,16 @@ export default function AdminConvitesPage() {
                                 <tr key={convite.id} className="hover:bg-stone-50/50 transition-colors">
                                     <td className="p-4 pl-6 font-mono font-bold text-text tracking-wider">{convite.code}</td>
                                     <td className="p-4 text-text-muted">{convite.email || '—'}</td>
+                                    <td className="p-4 font-ui">
+                                        <div className="flex flex-col gap-0.5">
+                                            <span className={`text-sm tracking-wide ${convite.plan_type === 'premium' ? 'text-accent font-bold' : 'text-text-muted font-medium'}`}>
+                                                {convite.plan_type === 'premium' ? 'PREMIUM' : 'FREE'}
+                                            </span>
+                                            {convite.plan_type === 'premium' && (
+                                                <span className="text-xs text-text-light">{convite.premium_duration_months} meses</span>
+                                            )}
+                                        </div>
+                                    </td>
                                     <td className="p-4">
                                         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${convite.used ? 'bg-green-50 text-green-600' : 'bg-primary/10 text-primary'}`}>
                                             {convite.used ? <><CheckCircle2 className="w-3 h-3" /> Usado</> : <><Link2 className="w-3 h-3" /> Disponível</>}
