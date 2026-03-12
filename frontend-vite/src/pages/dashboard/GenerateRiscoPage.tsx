@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { UploadCloud, X, ArrowRight, Wand2, Download, RefreshCw, Scissors, Image as ImageIcon, AlertCircle, Loader2, ChevronDown, Smile } from 'lucide-react';
+import { UploadCloud, X, ArrowRight, Wand2, Download, RefreshCw, Scissors, Image as ImageIcon, AlertCircle, Loader2, ChevronDown, Smile, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -25,6 +25,14 @@ export default function RiscoPage() {
     const [showUpgrade, setShowUpgrade] = useState(false);
     const [imageExpiresAt, setImageExpiresAt] = useState<string | null>(null);
     const [timeLeft, setTimeLeft] = useState<string>('');
+
+    // Novos states para o Modo Texto guiado (3 etapas)
+    const [textStep, setTextStep] = useState(1);
+    const [elementos, setElementos] = useState<{ nome: string; posicao: string }[]>([{ nome: '', posicao: 'Centro' }]);
+    const [textoRisco, setTextoRisco] = useState('');
+    const [fonteSelecionada, setFonteSelecionada] = useState('Cursiva');
+    const [ocasiao, setOcasiao] = useState('');
+    const [formatoBastidor, setFormatoBastidor] = useState('Redondo');
 
     // Dicas colapsáveis
     const [dicasRiscoAbertas, setDicasRiscoAbertas] = useState(() => {
@@ -160,7 +168,37 @@ export default function RiscoPage() {
                 payloadFormData.imageBase64 = base64;
                 payloadFormData.imageMediaType = type;
             } else {
-                payloadFormData.descricao = descricao;
+                // Montagem do prompt final para o modo texto
+                let styleText = 'linhas simples com poucos detalhes internos';
+                if (style === 'detailed') styleText = 'com texturas, dobras e feições';
+                if (style === 'outline') styleText = 'apenas silhueta externa sem detalhes internos';
+
+                const elementosDesc = elementos
+                    .filter(e => e.nome.trim().length > 0)
+                    .map(e => `${e.nome.trim()} posicionado na região ${e.posicao.toLowerCase()}`)
+                    .join('; ');
+
+                let prompt = `Gere um risco de bordado em preto e branco, traços finos sobre fundo branco puro, SEM preenchimento, SEM sombreamento, SEM gradientes, SEM fotografias reais, APENAS linhas de contorno no estilo risco de bordado para transferência em tecido.\n\n`;
+                prompt += `Estilo: ${styleText}.\n\n`;
+                prompt += `Composição: ${elementosDesc}.`;
+                
+                if (textoRisco.trim()) {
+                    prompt += ` texto "${textoRisco.trim()}" escrito em ${fonteSelecionada} integrado à composição.`;
+                }
+                
+                prompt += `\n\nFormato: `;
+                if (formatoBastidor === 'Redondo') prompt += 'composição dentro de um círculo simulando um bastidor redondo de bordado.';
+                else if (formatoBastidor === 'Quadrado') prompt += 'dentro de um quadrado simulando bastidor quadrado.';
+                else if (formatoBastidor === 'Retangular') prompt += 'dentro de um retângulo simulando bastidor retangular.';
+                else prompt += 'composição livre sem moldura.';
+
+                if (ocasiao) prompt += `\nTemática de ${ocasiao}.`;
+                if (keepText) prompt += `\nPreservar contornos de letras e textos visíveis.`;
+                if (isFaceless) prompt += `\nRemover completamente detalhes faciais (olhos, nariz, boca), manter apenas silhueta.`;
+
+                prompt += `\n\nO resultado DEVE ser um risco de bordado vetorial, adequado para transferência em tecido. Nunca gere fotografias, bastidores de madeira reais ou imagens com fundo colorido.`;
+
+                payloadFormData.descricao = prompt;
             }
 
             const { data: { session } } = await supabase.auth.getSession();
@@ -231,10 +269,42 @@ export default function RiscoPage() {
         <div className="max-w-3xl mx-auto">
             <div className="mb-8">
                 <h1 className="font-display text-2xl sm:text-4xl text-text mb-4">Gerador de Risco</h1>
-                <div className="flex items-center gap-4">
-                    <Progress value={step * 33.33} className="h-2 bg-border-light [&>div]:bg-primary flex-1" />
-                    <span className="text-sm font-ui text-text-muted whitespace-nowrap">Passo {step} de 3</span>
-                </div>
+                
+                {modo === 'imagem' ? (
+                    <div className="flex items-center gap-4">
+                        <Progress value={step * 33.33} className="h-2 bg-border-light [&>div]:bg-primary flex-1" />
+                        <span className="text-sm font-ui text-text-muted whitespace-nowrap">Passo {step} de 3</span>
+                    </div>
+                ) : (
+                    <div className="flex items-center justify-between relative mt-8 mb-4">
+                        <div className="absolute top-1/2 left-0 w-full h-0.5 bg-border-light -z-10 -translate-y-1/2 rounded-full"></div>
+                        
+                        {/* Linha de progresso preenchida */}
+                        <div 
+                            className="absolute top-1/2 left-0 h-0.5 bg-primary -z-10 -translate-y-1/2 rounded-full transition-all duration-300"
+                            style={{ width: `${((step === 2 && modo === 'texto' ? 3 : textStep) - 1) / 2 * 100}%` }}
+                        ></div>
+
+                        {[1, 2, 3].map((s) => (
+                            <div key={s} className="flex flex-col items-center gap-2 cursor-pointer" onClick={() => {
+                                // Se for Step 3, permitimos voltar p texto
+                                if (s < (step === 2 ? 3 : textStep)) {
+                                    if (step === 2) setStep(1);
+                                    setTextStep(s);
+                                }
+                            }}>
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-colors
+                                    ${(step === 2 ? 3 : textStep) === s ? 'border-primary bg-primary text-white' : 
+                                      s < (step === 2 ? 3 : textStep) ? 'border-primary bg-primary text-white' : 'border-border-light bg-surface text-text-muted'}`}>
+                                    {s < (step === 2 ? 3 : textStep) ? '✓' : s}
+                                </div>
+                                <span className={`text-xs font-semibold ${(step === 2 ? 3 : textStep) >= s ? 'text-primary' : 'text-text-muted'}`}>
+                                    {s === 1 ? 'Elementos' : s === 2 ? 'Personalização' : 'Estilo'}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
             <AnimatePresence mode="wait">
@@ -300,36 +370,101 @@ export default function RiscoPage() {
                                 </div>
                             )}
 
-                            {modo === 'texto' && (
+                            {modo === 'texto' && textStep === 1 && (
                                 <div className="animate-in fade-in text-left">
-                                    <label style={{ fontWeight: 600, fontSize: '15px', color: '#1A1A1A', display: 'block', marginBottom: '8px' }}>
-                                        Descreva o risco que você quer gerar
-                                    </label>
-                                    <textarea
-                                        value={descricao}
-                                        onChange={e => setDescricao(e.target.value)}
-                                        placeholder="Ex: Rosa com pétalas abertas e folhas, estilo delicado, traços finos..."
-                                        rows={4}
-                                        className="w-full p-4 rounded-2xl border border-border-light bg-surface-warm/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/50 font-ui text-[15px] resize-y mb-6"
-                                    />
+                                    <h2 className="font-display text-2xl text-text mb-2">O que você quer no risco?</h2>
+                                    <p className="font-ui text-text-light mb-6">Adicione os elementos e escolha onde cada um aparece na composição.</p>
+                                    
+                                    <div className="space-y-4 mb-6">
+                                        {elementos.map((el, index) => (
+                                            <div key={index} className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                                                <input
+                                                    type="text"
+                                                    value={el.nome}
+                                                    onChange={e => {
+                                                        const newEls = [...elementos];
+                                                        newEls[index].nome = e.target.value;
+                                                        setElementos(newEls);
+                                                        // Fallback do antigo descricao para não quebrar validação do disabled
+                                                        setDescricao(newEls.map(x => x.nome).join(' ')); 
+                                                    }}
+                                                    placeholder="Ex: leão fofo, borboleta, coração..."
+                                                    className="flex-1 p-3 rounded-xl border border-border-light bg-surface-warm/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/50 font-ui text-[15px]"
+                                                />
+                                                <div className="flex w-full sm:w-auto gap-2">
+                                                    <select
+                                                        value={el.posicao}
+                                                        onChange={e => {
+                                                            const newEls = [...elementos];
+                                                            newEls[index].posicao = e.target.value;
+                                                            setElementos(newEls);
+                                                        }}
+                                                        className="flex-1 sm:w-48 p-3 rounded-xl border border-border-light bg-surface-warm/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/50 font-ui text-[14px]"
+                                                    >
+                                                        <option value="Superior esquerdo">Superior esquerdo</option>
+                                                        <option value="Superior centro">Superior centro</option>
+                                                        <option value="Superior direito">Superior direito</option>
+                                                        <option value="Centro esquerdo">Centro esquerdo</option>
+                                                        <option value="Centro">Centro</option>
+                                                        <option value="Centro direito">Centro direito</option>
+                                                        <option value="Inferior esquerdo">Inferior esquerdo</option>
+                                                        <option value="Inferior centro">Inferior centro</option>
+                                                        <option value="Inferior direito">Inferior direito</option>
+                                                    </select>
+                                                    {elementos.length > 1 && (
+                                                        <button 
+                                                            onClick={() => {
+                                                                const newEls = elementos.filter((_, i) => i !== index);
+                                                                setElementos(newEls);
+                                                                setDescricao(newEls.map(x => x.nome).join(' '));
+                                                            }}
+                                                            className="p-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-100 transition-colors"
+                                                            title="Remover elemento"
+                                                        >
+                                                            <X className="w-5 h-5" />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {elementos.length < 6 && (
+                                        <button 
+                                            onClick={() => setElementos([...elementos, { nome: '', posicao: 'Centro' }])}
+                                            className="w-full py-3 border-2 border-dashed border-border text-text-muted hover:border-primary hover:text-primary rounded-xl transition-colors font-semibold flex items-center justify-center gap-2 text-sm mb-6"
+                                        >
+                                            <Plus className="w-4 h-4" /> Adicionar elemento
+                                        </button>
+                                    )}
 
                                     <p style={{ fontSize: '13px', color: '#6B6B6B', marginBottom: '12px', fontWeight: 500 }}>
                                         💡 Sugestões rápidas — clique para usar:
                                     </p>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                                         {[
-                                            'Rosa com pétalas abertas',
-                                            'Borboleta delicada',
-                                            'Mandala circular flor',
-                                            'Flor de girassol',
-                                            'Folhas de eucalipto',
-                                            'Coelho fofo com laço',
-                                            'Coração com flores',
-                                            'Porta maternidade fundo do mar',
+                                            'Leão fofo sentado', 
+                                            'Borboleta com flores', 
+                                            'Coelho com laço', 
+                                            'Girassol com folhas', 
+                                            'Balão de ar quente', 
+                                            'Coroa com estrelas', 
+                                            'Tenda de circo', 
+                                            'Flamingo delicado'
                                         ].map(sugestao => (
                                             <button
                                                 key={sugestao}
-                                                onClick={() => setDescricao(sugestao)}
+                                                onClick={() => {
+                                                    const newEls = [...elementos];
+                                                    const emptyIndex = newEls.findIndex(e => e.nome.trim() === '');
+                                                    if (emptyIndex !== -1) {
+                                                        newEls[emptyIndex].nome = sugestao;
+                                                    } else if (newEls.length < 6) {
+                                                        newEls.push({ nome: sugestao, posicao: 'Centro' });
+                                                    }
+                                                    setElementos(newEls);
+                                                    setDescricao(newEls.map(x => x.nome).join(' '));
+                                                }}
                                                 style={{
                                                     background: 'white', border: '1px solid #E5D9CC', borderRadius: '999px',
                                                     padding: '8px 16px', fontSize: '13px', color: '#1A1A1A', cursor: 'pointer',
@@ -342,14 +477,131 @@ export default function RiscoPage() {
                                             </button>
                                         ))}
                                     </div>
+                                    
+                                    <div className="flex justify-end mt-8 border-t border-border-light pt-6">
+                                        <Button 
+                                            disabled={!elementos.some(e => e.nome.trim().length > 0)} 
+                                            onClick={() => setTextStep(2)} 
+                                            className="rounded-full px-8 bg-primary hover:bg-primary-dark shadow-md text-base h-12"
+                                        >
+                                            Personalização <ArrowRight className="w-4 h-4 ml-2" />
+                                        </Button>
+                                    </div>
                                 </div>
                             )}
 
-                            <div className="flex justify-end mt-8 border-t border-border-light pt-6">
-                                <Button disabled={(modo === 'imagem' && !filePreview) || (modo === 'texto' && !descricao.trim())} onClick={() => setStep(2)} className="rounded-full px-8 bg-primary hover:bg-primary-dark shadow-md text-base h-12">
-                                    Próximo <ArrowRight className="w-4 h-4 ml-2" />
-                                </Button>
-                            </div>
+                            {modo === 'texto' && textStep === 2 && (
+                                <div className="animate-in fade-in text-left">
+                                    <h2 className="font-display text-2xl text-text mb-2">Personalização</h2>
+                                    <p className="font-ui text-text-light mb-6">Textos, temáticas especiais e formato do bastidor.</p>
+
+                                    <div className="mb-8">
+                                        <label style={{ fontWeight: 600, fontSize: '15px', color: '#1A1A1A', display: 'block', marginBottom: '8px' }}>
+                                            Texto para incluir no risco (opcional)
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={textoRisco}
+                                            onChange={e => setTextoRisco(e.target.value)}
+                                            placeholder="Ex: Feliz Aniversário, Ana 1 Ano..."
+                                            className="w-full p-4 rounded-xl border border-border-light bg-surface-warm/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/50 font-ui text-[15px]"
+                                        />
+                                        
+                                        {textoRisco.trim().length > 0 && (
+                                            <div className="mt-4 animate-in fade-in">
+                                                <label style={{ fontSize: '14px', color: '#6B6B6B', display: 'block', marginBottom: '8px', fontWeight: 500 }}>
+                                                    Estilo da Fonte:
+                                                </label>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {['Cursiva', 'Script', 'Bastão', 'Serifada'].map(fonte => (
+                                                        <button
+                                                            key={fonte}
+                                                            onClick={() => setFonteSelecionada(fonte)}
+                                                            className={`px-4 py-2 rounded-full text-sm font-medium border-2 transition-colors ${
+                                                                fonteSelecionada === fonte 
+                                                                ? 'border-primary bg-primary/10 text-primary' 
+                                                                : 'border-border-light bg-white text-text hover:border-primary-light'
+                                                            }`}
+                                                        >
+                                                            {fonte}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="mb-8">
+                                        <label style={{ fontWeight: 600, fontSize: '15px', color: '#1A1A1A', display: 'block', marginBottom: '8px' }}>
+                                            Ocasião (opcional)
+                                        </label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {['Dia das Mães', 'Casamento', 'Bebê', 'Aniversário', 'Decoração', 'Presente', 'Religioso', 'Livre / Sem ocasião'].map(oc => (
+                                                <button
+                                                    key={oc}
+                                                    onClick={() => setOcasiao(oc === ocasiao ? '' : oc)}
+                                                    className={`px-4 py-2 rounded-full text-sm font-medium border-2 transition-colors ${
+                                                        ocasiao === oc 
+                                                        ? 'border-primary bg-primary/10 text-primary' 
+                                                        : 'border-border-light bg-white text-text hover:border-primary-light'
+                                                    }`}
+                                                >
+                                                    {oc}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="mb-8">
+                                        <label style={{ fontWeight: 600, fontSize: '15px', color: '#1A1A1A', display: 'block', marginBottom: '8px' }}>
+                                            Formato do risco / bastidor
+                                        </label>
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                            {[
+                                                { id: 'Redondo', label: 'Redondo' },
+                                                { id: 'Quadrado', label: 'Quadrado' },
+                                                { id: 'Retangular', label: 'Retangular' },
+                                                { id: 'Sem bastidor', label: 'Sem bastidor' }
+                                            ].map(formato => (
+                                                <div
+                                                    key={formato.id}
+                                                    onClick={() => setFormatoBastidor(formato.id)}
+                                                    className={`p-3 rounded-xl border-2 text-center cursor-pointer transition-colors ${
+                                                        formatoBastidor === formato.id 
+                                                        ? 'border-primary bg-primary/5 text-primary font-semibold' 
+                                                        : 'border-border-light bg-surface hover:border-primary-light text-text'
+                                                    }`}
+                                                >
+                                                    <span className="text-sm">{formato.label}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-between items-center mt-8 border-t border-border-light pt-6">
+                                        <button 
+                                            onClick={() => setTextStep(1)}
+                                            className="text-text-muted hover:text-text font-medium text-sm flex items-center"
+                                        >
+                                            ← Voltar
+                                        </button>
+                                        <Button 
+                                            onClick={() => setStep(2)} 
+                                            className="rounded-full px-8 bg-primary hover:bg-primary-dark shadow-md text-base h-12"
+                                        >
+                                            Estilo do Risco <ArrowRight className="w-4 h-4 ml-2" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {modo === 'imagem' && (
+                                <div className="flex justify-end mt-8 border-t border-border-light pt-6">
+                                    <Button disabled={!filePreview} onClick={() => setStep(2)} className="rounded-full px-8 bg-primary hover:bg-primary-dark shadow-md text-base h-12">
+                                        Próximo <ArrowRight className="w-4 h-4 ml-2" />
+                                    </Button>
+                                </div>
+                            )}
                         </div>
                     </motion.div>
                 )}
@@ -460,8 +712,8 @@ export default function RiscoPage() {
                                         <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
                                             <span style={{ fontSize: '14px', marginTop: '1px' }}>⚠️</span>
                                             <div>
-                                                <p style={{ color: '#1A1A1A', fontWeight: 600, fontSize: '13px', margin: 0 }}>Evite fotos escuras, desfocadas ou com fundos poluídos</p>
-                                                <p style={{ color: '#6B6B6B', fontSize: '13px', margin: '2px 0 0', lineHeight: 1.5 }}>A IA remove o fundo, mas fotos com pouca luz ou muito desfoque podem gerar contornos imprecisos.</p>
+                                                <p style={{ color: '#1A1A1A', fontWeight: 600, fontSize: '13px', margin: 0 }}>Evite sombras intensas</p>
+                                                <p style={{ color: '#6B6B6B', fontSize: '13px', margin: '2px 0 0', lineHeight: 1.5 }}>A IA tem dificuldade quando a imagem tem luz muito marcada (metade clara e metade escura). Prefira fotos tiradas em luz natural e uniforme.</p>
                                             </div>
                                         </div>
                                     </div>
@@ -469,13 +721,33 @@ export default function RiscoPage() {
                             </div>
 
                             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between mt-8 border-t border-border/50 pt-6 gap-4">
-                                <Button variant="ghost" onClick={() => setStep(1)} className="text-text-light hover:text-text rounded-full px-6 order-2 sm:order-1">
+                                <Button variant="ghost" 
+                                    onClick={() => {
+                                        setStep(1);
+                                        if (modo === 'texto') setTextStep(2); // Retorna ao step de formatação
+                                    }}
+                                    className="text-text-light hover:text-text rounded-full px-6 order-2 sm:order-1"
+                                >
                                     Voltar
                                 </Button>
                                 <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 order-1 sm:order-2">
                                     <span className="text-sm font-ui text-text-muted">Custo: <span className="font-semibold text-warn">1 Geração</span></span>
-                                    <Button onClick={handleGenerate} className="rounded-full px-8 bg-primary hover:bg-primary-dark shadow-md text-base h-12 w-full sm:w-auto">
-                                        Gerar Magia <Wand2 className="w-4 h-4 ml-2" />
+                                    <Button 
+                                        disabled={isGenerating}
+                                        onClick={handleGenerate}
+                                        className="rounded-full px-8 bg-primary hover:bg-primary-dark shadow-md text-base h-12 w-full sm:w-auto relative overflow-hidden group"
+                                    >
+                                        {isGenerating ? (
+                                            <>
+                                                <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+                                                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                                                Gerando Arte...
+                                            </>
+                                        ) : (
+                                            <>
+                                                {modo === 'texto' ? 'Gerar Risco' : 'Gerar Risco Mágico'} <Wand2 className="w-5 h-5 ml-2 group-hover:rotate-12 transition-transform" />
+                                            </>
+                                        )}
                                     </Button>
                                 </div>
                             </div>
