@@ -30,6 +30,8 @@ export default function AdminLayout() {
                         <Link to="/admin/usuarios" onClick={() => setMobileMenuOpen(false)} className="block p-4 rounded-xl text-text font-ui font-medium bg-white shadow-sm border border-border-light">Usuários</Link>
                         <Link to="/admin/pagamentos" onClick={() => setMobileMenuOpen(false)} className="block p-4 rounded-xl text-text font-ui font-medium bg-white shadow-sm border border-border-light">Pagamentos</Link>
                         <Link to="/admin/pacotes" onClick={() => setMobileMenuOpen(false)} className="block p-4 rounded-xl text-text font-ui font-medium bg-white shadow-sm border border-border-light">Pacotes de Crédito</Link>
+                        <Link to="/admin/convites" onClick={() => setMobileMenuOpen(false)} className="block p-4 rounded-xl text-text font-ui font-medium bg-white shadow-sm border border-border-light">Convites</Link>
+                        <Link to="/admin/emails" onClick={() => setMobileMenuOpen(false)} className="block p-4 rounded-xl text-text font-ui font-medium bg-white shadow-sm border border-border-light">Emails</Link>
                         <Link to="/admin/configuracoes" onClick={() => setMobileMenuOpen(false)} className="block p-4 rounded-xl text-text font-ui font-medium bg-white shadow-sm border border-border-light">Configurações</Link>
                         <Link to="/admin/infraestrutura" onClick={() => setMobileMenuOpen(false)} className="block p-4 rounded-xl text-text font-ui font-medium bg-white shadow-sm border border-border-light">🏥 Infraestrutura</Link>
                     </nav>

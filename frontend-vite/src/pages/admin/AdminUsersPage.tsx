@@ -136,7 +136,9 @@ export default function AdminUsersPage() {
     const supabase = createClient();
     const { showAlert, showConfirm } = useModal();
     const { toast } = useToast();
+    const [usuariosTab, setUsuariosTab] = useState<'ativos' | 'espera'>('ativos');
     const [users, setUsers] = useState<any[]>([]);
+    const [waitlistUsers, setWaitlistUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -167,8 +169,9 @@ export default function AdminUsersPage() {
         if (error) console.error(error);
         else setUsers(data || []);
 
-        const { count } = await supabase.from('waitlist').select('*', { count: 'exact', head: true });
+        const { data: waitlistData, count } = await supabase.from('waitlist').select('*', { count: 'exact' }).order('created_at', { ascending: false });
         setWaitlistCount(count || 0);
+        setWaitlistUsers(waitlistData || []);
 
         setLoading(false);
     }
@@ -255,7 +258,10 @@ export default function AdminUsersPage() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                <div style={{ background: 'white', borderRadius: '16px', padding: '24px', border: '1px solid #E5D9CC', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}>
+                <div 
+                    onClick={() => setUsuariosTab('ativos')}
+                    style={{ background: usuariosTab === 'ativos' ? '#FDF0EE' : 'white', borderRadius: '16px', padding: '24px', border: usuariosTab === 'ativos' ? '2px solid #AC5148' : '1px solid #E5D9CC', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', boxShadow: '0 1px 2px rgba(0,0,0,0.02)', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                >
                     <p style={{ fontSize: '36px', fontWeight: 700, color: '#AC5148', margin: 0, lineHeight: 1 }}>{users.length}</p>
                     <p style={{ color: '#6B6B6B', marginTop: '8px', fontWeight: 500, fontSize: '14px' }}>Total de usuários</p>
                 </div>
@@ -263,7 +269,10 @@ export default function AdminUsersPage() {
                     <p style={{ fontSize: '36px', fontWeight: 700, color: '#AC5148', margin: 0, lineHeight: 1 }}>{users.filter(u => u.plan === 'premium').length}</p>
                     <p style={{ color: '#6B6B6B', marginTop: '8px', fontWeight: 500, fontSize: '14px' }}>Assinantes Premium</p>
                 </div>
-                <div style={{ background: 'white', borderRadius: '16px', padding: '24px', border: '1px solid #E5D9CC', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}>
+                <div 
+                    onClick={() => setUsuariosTab('espera')}
+                    style={{ background: usuariosTab === 'espera' ? '#FDF0EE' : 'white', borderRadius: '16px', padding: '24px', border: usuariosTab === 'espera' ? '2px solid #AC5148' : '1px solid #E5D9CC', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', boxShadow: '0 1px 2px rgba(0,0,0,0.02)', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                >
                     <p style={{ fontSize: '36px', fontWeight: 700, color: '#AC5148', margin: 0, lineHeight: 1 }}>{waitlistCount}</p>
                     <p style={{ color: '#6B6B6B', marginTop: '8px', fontWeight: 500, fontSize: '14px' }}>Lista de espera</p>
                 </div>
@@ -308,75 +317,121 @@ export default function AdminUsersPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border/30 font-ui">
-                            {filteredUsers.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="p-16 text-center text-text-light italic">Nenhum usuário foi encontrado para essa busca.</td>
-                                </tr>
-                            ) : filteredUsers.map((user) => (
-                                <tr key={user.id} onClick={() => openUserDetails(user)} className="hover:bg-stone-50/80 transition-colors cursor-pointer group">
-                                    <td className="p-5 pl-6">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                                                <User className="w-5 h-5 text-primary" />
+                            {usuariosTab === 'ativos' && (
+                                filteredUsers.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={6} className="p-16 text-center text-text-light italic">Nenhum usuário foi encontrado para essa busca.</td>
+                                    </tr>
+                                ) : filteredUsers.map((user) => (
+                                    <tr key={user.id} onClick={() => openUserDetails(user)} className="hover:bg-stone-50/80 transition-colors cursor-pointer group">
+                                        <td className="p-5 pl-6">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                                    <User className="w-5 h-5 text-primary" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-medium text-text group-hover:text-primary transition-colors">{user.full_name}</p>
+                                                    <p className="text-xs text-text-muted font-mono mt-0.5">ID: {user.id.slice(0, 8)}...</p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <p className="font-medium text-text group-hover:text-primary transition-colors">{user.full_name}</p>
-                                                <p className="text-xs text-text-muted font-mono mt-0.5">ID: {user.id.slice(0, 8)}...</p>
+                                        </td>
+                                        <td className="p-5">
+                                            <p className="text-sm text-text font-medium">{user.email || 'Email Indisponível'}</p>
+                                            <p className="text-xs text-text-muted mt-0.5">{user.cpf ? `CPF: ${user.cpf}` : 'Sem registro documental'}</p>
+                                        </td>
+                                        <td className="p-5 whitespace-nowrap">
+                                            <Badge variant="outline" className={user.plan === 'premium' ? 'bg-accent/10 text-accent border-accent/20 px-3 py-1' : 'bg-stone-100 text-text-muted border-transparent px-3 py-1'}>
+                                                {user.plan === 'premium' ? 'Plano Premium' : 'Free (Básico)'}
+                                            </Badge>
+                                        </td>
+                                        <td className="p-5">
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-sm text-text font-medium">{user.free_generations_used || 0} ut. mensais</span>
+                                                <span className="text-xs text-primary font-bold">+{user.extra_credits || 0} avulsos saldos</span>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td className="p-5">
-                                        <p className="text-sm text-text font-medium">{user.email || 'Email Indisponível'}</p>
-                                        <p className="text-xs text-text-muted mt-0.5">{user.cpf ? `CPF: ${user.cpf}` : 'Sem registro documental'}</p>
-                                    </td>
-                                    <td className="p-5 whitespace-nowrap">
-                                        <Badge variant="outline" className={user.plan === 'premium' ? 'bg-accent/10 text-accent border-accent/20 px-3 py-1' : 'bg-stone-100 text-text-muted border-transparent px-3 py-1'}>
-                                            {user.plan === 'premium' ? 'Plano Premium' : 'Free (Básico)'}
-                                        </Badge>
-                                    </td>
-                                    <td className="p-5">
-                                        <div className="flex flex-col gap-1">
-                                            <span className="text-sm text-text font-medium">{user.free_generations_used} ut. mensais</span>
-                                            <span className="text-xs text-primary font-bold">+{user.extra_credits} avulsos saldos</span>
-                                        </div>
-                                    </td>
-                                    <td className="p-5">
-                                        <div className="flex items-center gap-2">
-                                            <div className={`w-2 h-2 rounded-full ${user.status === 'blocked' ? 'bg-destructive' : 'bg-green-500'}`} />
-                                            <span className={`text-sm font-medium ${user.status === 'blocked' ? 'text-destructive' : 'text-green-600'}`}>
-                                                {user.status === 'blocked' ? 'Bloqueado' : 'Operacional'}
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td className="p-5 pr-6 text-right">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="rounded-full shadow-none border-0 text-text-light hover:text-text hover:bg-stone-200" onClick={(e) => e.stopPropagation()}>
-                                                    <MoreVertical className="w-5 h-5" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="rounded-xl border-border-light bg-white min-w-[180px] p-2">
-                                                <DropdownMenuItem
-                                                    onClick={(e) => toggleUserStatus(user.id, user.status, e)}
-                                                    className={`py-3 px-4 rounded-lg cursor-pointer ${user.status === 'blocked' ? 'text-green-600 focus:bg-green-50 focus:text-green-600' : 'text-destructive focus:bg-destructive/10 focus:text-destructive'}`}
-                                                >
-                                                    {user.status === 'blocked' ? (
-                                                        <><ShieldCheck className="w-4 h-4 mr-3" /> Reativar Conta</>
-                                                    ) : (
-                                                        <><ShieldAlert className="w-4 h-4 mr-3" /> Suspender Acesso</>
-                                                    )}
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem
-                                                    onClick={(e) => { e.stopPropagation(); setModalUser(user); }}
-                                                    className="py-3 px-4 rounded-lg cursor-pointer text-[#AC5148] focus:bg-[#AC5148]/10 focus:text-[#AC5148] font-medium"
-                                                >
-                                                    <Calendar className="w-4 h-4 mr-3" /> Alterar Plano Manual
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </td>
-                                </tr>
-                            ))}
+                                        </td>
+                                        <td className="p-5">
+                                            <div className="flex items-center gap-2">
+                                                <div className={`w-2 h-2 rounded-full ${user.status === 'blocked' ? 'bg-destructive' : 'bg-green-500'}`} />
+                                                <span className={`text-sm font-medium ${user.status === 'blocked' ? 'text-destructive' : 'text-green-600'}`}>
+                                                    {user.status === 'blocked' ? 'Bloqueado' : 'Operacional'}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="p-5 pr-6 text-right">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="rounded-full shadow-none border-0 text-text-light hover:text-text hover:bg-stone-200" onClick={(e) => e.stopPropagation()}>
+                                                        <MoreVertical className="w-5 h-5" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end" className="rounded-xl border-border-light bg-white min-w-[180px] p-2">
+                                                    <DropdownMenuItem
+                                                        onClick={(e) => toggleUserStatus(user.id, user.status, e)}
+                                                        className={`py-3 px-4 rounded-lg cursor-pointer ${user.status === 'blocked' ? 'text-green-600 focus:bg-green-50 focus:text-green-600' : 'text-destructive focus:bg-destructive/10 focus:text-destructive'}`}
+                                                    >
+                                                        {user.status === 'blocked' ? (
+                                                            <><ShieldCheck className="w-4 h-4 mr-3" /> Reativar Conta</>
+                                                        ) : (
+                                                            <><ShieldAlert className="w-4 h-4 mr-3" /> Suspender Acesso</>
+                                                        )}
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={(e) => { e.stopPropagation(); setModalUser(user); }}
+                                                        className="py-3 px-4 rounded-lg cursor-pointer text-[#AC5148] focus:bg-[#AC5148]/10 focus:text-[#AC5148] font-medium"
+                                                    >
+                                                        <Calendar className="w-4 h-4 mr-3" /> Alterar Plano Manual
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+
+                            {usuariosTab === 'espera' && (
+                                waitlistUsers.filter(w => (w.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) || (w.email?.toLowerCase() || '').includes(searchTerm.toLowerCase())).length === 0 ? (
+                                    <tr>
+                                        <td colSpan={6} className="p-16 text-center text-text-light italic">Nenhum registro encontrado na lista de espera.</td>
+                                    </tr>
+                                ) : waitlistUsers.filter(w => (w.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) || (w.email?.toLowerCase() || '').includes(searchTerm.toLowerCase())).map((wuser) => (
+                                    <tr key={wuser.id} className="hover:bg-stone-50/80 transition-colors group">
+                                        <td className="p-5 pl-6">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-border-light flex items-center justify-center shrink-0">
+                                                    <User className="w-5 h-5 text-text-muted" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-medium text-text">{wuser.name || 'Sem Nome'}</p>
+                                                    <p className="text-xs text-text-muted font-mono mt-0.5">ID: {wuser.id.toString().slice(0, 8)}...</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="p-5">
+                                            <p className="text-sm text-text font-medium">{wuser.email || 'Sem Email'}</p>
+                                        </td>
+                                        <td className="p-5 whitespace-nowrap">
+                                            <Badge variant="outline" className="bg-stone-100 text-text-muted border-transparent px-3 py-1">
+                                                Lista de Espera
+                                            </Badge>
+                                        </td>
+                                        <td className="p-5">
+                                            <span className="text-sm text-text-muted italic">Inativo</span>
+                                        </td>
+                                        <td className="p-5">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-2 h-2 rounded-full bg-yellow-400" />
+                                                <span className="text-sm font-medium text-yellow-600">
+                                                    Aguardando
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="p-5 pr-6 text-right">
+                                            {/* Sem ações complexas por enquanto para leads da waitlist */}
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
