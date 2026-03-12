@@ -45,7 +45,7 @@ export function AdminSidebar() {
     };
 
     return (
-        <aside className="hidden lg:flex flex-col w-[260px] h-screen fixed top-0 left-0 bg-[#DED181] border-r border-black/10 z-20 shadow-md">
+        <aside className="hidden lg:flex flex-col w-[260px] h-screen fixed top-0 left-0 bg-[#F7E1D7] border-r border-black/10 z-20 shadow-md">
             <div className="pt-6 pb-6 px-6 flex flex-col items-center justify-center border-b border-black/10">
                 <img
                     src={platformLogo || '/logo.png'}
@@ -80,7 +80,7 @@ export function AdminSidebar() {
                 })}
             </nav>
 
-            <div className="p-4 border-t border-black/10 bg-[#DED181]">
+            <div className="p-4 border-t border-black/10 bg-[#F7E1D7]">
                 <div className="p-3 bg-[#C9BC6A]/40 rounded-xl border border-black/10 flex items-center gap-3 shadow-sm mb-3">
                     <div className="w-10 h-10 rounded-full bg-[#AC5148] flex items-center justify-center text-white font-display flex-shrink-0 uppercase font-bold shadow-sm">
                         {profileName.charAt(0)}

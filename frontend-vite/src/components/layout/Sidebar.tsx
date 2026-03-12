@@ -64,7 +64,7 @@ export function Sidebar() {
 
     return (
         <>
-            <aside className="hidden lg:flex flex-col w-[260px] h-screen fixed top-0 left-0 bg-[#DED181] border-r border-black/10 z-20 shadow-md">
+            <aside className="hidden lg:flex flex-col w-[260px] h-screen fixed top-0 left-0 bg-[#F7E1D7] border-r border-black/10 z-20 shadow-md">
 
                 {/* CABEÇALHO COM LOGO */}
                 <Link to="/dashboard" className="pt-6 pb-6 px-6 flex flex-col items-center justify-center border-b border-black/10 shrink-0 group hover:bg-[#C9BC6A]/40 transition-colors">
@@ -130,7 +130,7 @@ export function Sidebar() {
                 </nav>
 
                 {/* ÁREA DE CONTA FIXA NO RODAPÉ */}
-                <div className="shrink-0 pt-2 pb-4 px-4 border-t border-black/10 bg-[#DED181] shadow-[0_-6px_16px_rgba(0,0,0,0.06)] z-10">
+                <div className="shrink-0 pt-2 pb-4 px-4 border-t border-black/10 bg-[#F7E1D7] shadow-[0_-6px_16px_rgba(0,0,0,0.06)] z-10">
                     <span className="text-[10px] font-bold text-[#2D2D2D]/60 tracking-wider uppercase ml-2 mb-2 block">Conta</span>
                     <div className="space-y-0.5 mb-3">
                         <div className="flex items-center gap-2 w-full">

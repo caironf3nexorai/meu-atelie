@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { ChevronDown } from 'lucide-react';
 
 const primaryColor = '#AC5148';
-const secondaryColor = '#DED181';
+const secondaryColor = '#F7E1D7';
 const accentColor = '#C29A51';
 const bgColor = '#F2E9DB';
 const darkColor = '#1C1410';

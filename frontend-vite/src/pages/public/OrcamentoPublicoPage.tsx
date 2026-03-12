@@ -203,7 +203,7 @@ export default function OrcamentoPublicoPage() {
                     {/* Header do orçamento */}
                     <div style={{ background: '#2D2D2D', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
-                            <p style={{ color: '#DED181', fontSize: '12px', fontWeight: 700, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                            <p style={{ color: '#F7E1D7', fontSize: '12px', fontWeight: 700, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                                 Orçamento
                             </p>
                             <h3 style={{ color: 'white', fontSize: '22px', fontWeight: 700, margin: 0 }}>
@@ -214,7 +214,7 @@ export default function OrcamentoPublicoPage() {
                             <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', margin: '0 0 2px' }}>
                                 Emitido em {format(new Date(orcamento.created_at), 'dd/MM/yyyy')}
                             </p>
-                            <p style={{ color: isExpirado ? '#FCA5A5' : '#DED181', fontSize: '12px', margin: 0, fontWeight: 600 }}>
+                            <p style={{ color: isExpirado ? '#FCA5A5' : '#F7E1D7', fontSize: '12px', margin: 0, fontWeight: 600 }}>
                                 {isExpirado ? '⚠️ Expirado' : `Válido até ${format(addDays(new Date(orcamento.created_at), orcamento.validade_dias || 7), 'dd/MM/yyyy')}`}
                             </p>
                         </div>

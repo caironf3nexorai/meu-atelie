@@ -201,7 +201,7 @@ export default function AssinarPage() {
                     expiryYear: expYear.length === 2 ? `20${expYear}` : expYear,
                     ccv: data.cvv || ''
                 } : null,
-                coupon_code: cupomUrl || null
+                coupon_code: cupomValido ? codigoCupom : null
             };
 
             // Resgatar a sessão atual para enviar no cabeçalho Authorization
@@ -261,18 +261,8 @@ export default function AssinarPage() {
                         <div className="bg-green-50/50 border border-green-500/20 rounded-xl p-4 mb-6 flex items-center gap-3">
                             <span className="text-2xl">🎉</span>
                             <div>
-                                <p className="text-green-700 font-bold m-0">Cupom de fundadora aplicado!</p>
-                                <p className="text-text-light text-sm mt-1">Você paga R${Math.floor(cupomInfo.discount_value)}/mês para sempre. Apenas {cupomInfo.remaining} vagas restantes!</p>
-                            </div>
-                        </div>
-                    )}
-
-                    {cupomEsgotado && (
-                        <div className="bg-red-50 border border-red-500/20 rounded-xl p-4 mb-6 flex items-center gap-3">
-                            <span className="text-2xl">😔</span>
-                            <div>
-                                <p className="text-red-600 font-bold m-0">Benefício esgotado</p>
-                                <p className="text-text-light text-sm mt-1">As vagas comemorativas já foram preenchidas. Você ainda pode assinar por R${Math.floor(planPrice)}/mês!</p>
+                                <p className="text-green-700 font-bold m-0">Cupom de desconto aplicado!</p>
+                                <p className="text-text-light text-sm mt-1">Você paga R${Math.floor(cupomInfo.discount_value)}/mês para sempre.</p>
                             </div>
                         </div>
                     )}
@@ -514,7 +504,7 @@ export default function AssinarPage() {
 
                 {/* RESUMO DO PEDIDO */}
                 <div className="bg-[#2D2D2D] text-white rounded-2xl p-6 shadow-xl sticky top-24">
-                    <h3 className="font-display text-2xl font-bold mb-6 text-[#DED181]">Meu Ateliê Premium</h3>
+                    <h3 className="font-display text-2xl font-bold mb-6 text-[#F7E1D7]">Meu Ateliê Premium</h3>
 
                     {/* Campo de Cupom Manual */}
                     <div style={{ background: '#F2E9DB', borderRadius: '14px', padding: '16px', marginBottom: '20px' }}>
@@ -576,19 +566,19 @@ export default function AssinarPage() {
 
                     <ul className="space-y-4 mb-8">
                         <li className="flex items-start gap-3">
-                            <CheckCircle2 className="w-5 h-5 text-[#DED181] shrink-0 mt-0.5" />
+                            <CheckCircle2 className="w-5 h-5 text-[#F7E1D7] shrink-0 mt-0.5" />
                             <span className="text-white/80 leading-snug">15 gerações mensais</span>
                         </li>
                         <li className="flex items-start gap-3">
-                            <CheckCircle2 className="w-5 h-5 text-[#DED181] shrink-0 mt-0.5" />
+                            <CheckCircle2 className="w-5 h-5 text-[#F7E1D7] shrink-0 mt-0.5" />
                             <span className="text-white/80 leading-snug">70 conversas com a IA (Lia)</span>
                         </li>
                         <li className="flex items-start gap-3">
-                            <CheckCircle2 className="w-5 h-5 text-[#DED181] shrink-0 mt-0.5" />
+                            <CheckCircle2 className="w-5 h-5 text-[#F7E1D7] shrink-0 mt-0.5" />
                             <span className="text-white/80 leading-snug">Todos os módulos de gestão</span>
                         </li>
                         <li className="flex items-start gap-3">
-                            <CheckCircle2 className="w-5 h-5 text-[#DED181] shrink-0 mt-0.5" />
+                            <CheckCircle2 className="w-5 h-5 text-[#F7E1D7] shrink-0 mt-0.5" />
                             <span className="text-white/80 leading-snug">Cronômetro de Produtividade</span>
                         </li>
                     </ul>

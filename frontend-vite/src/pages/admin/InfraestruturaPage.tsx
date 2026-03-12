@@ -270,7 +270,7 @@ export default function InfraestruturaPage() {
                     ].map((plano, i) => (
                         <div key={i} style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '14px', padding: '18px', border: '1px solid rgba(255,255,255,0.1)' }}>
                             <p style={{ color: 'white', fontWeight: 700, margin: '0 0 4px', fontSize: '15px' }}>{plano.servico}</p>
-                            <p style={{ color: '#DED181', fontWeight: 600, margin: '0 0 8px', fontSize: '14px' }}>{plano.preco}</p>
+                            <p style={{ color: '#F7E1D7', fontWeight: 600, margin: '0 0 8px', fontSize: '14px' }}>{plano.preco}</p>
                             <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', margin: '0 0 16px', lineHeight: 1.5 }}>{plano.resolve}</p>
                             <a href={plano.link} target="_blank" rel="noreferrer"
                                 style={{
