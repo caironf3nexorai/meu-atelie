@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/client';
 import { NotificationBell } from '../shared/NotificationBell';
 import { UpgradeModal } from '../shared/UpgradeModal';
 import { usePlatform } from '@/contexts/PlatformContext';
+import { useAuth } from '@/lib/hooks/useAuth';
 
 const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: Home, isPremium: false },
@@ -30,23 +31,12 @@ const navItems = [
 export function TopBar() {
     const [open, setOpen] = useState(false);
     const { platformName, platformLogo } = usePlatform();
-    const [isPremium, setIsPremium] = useState(false);
-    const [role, setRole] = useState('user');
+    const { profile: authProfile } = useAuth();
+    
+    const isPremium = authProfile?.plan !== 'free' && !!authProfile;
+    const role = authProfile?.role || 'user';
 
     const supabase = createClient();
-    useEffect(() => {
-        async function loadProfile() {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                const { data } = await supabase.from('profiles').select('role, plan').eq('id', user.id).single();
-                if (data) {
-                    setRole(data.role);
-                    if (data.plan !== 'free') setIsPremium(true);
-                }
-            }
-        }
-        loadProfile();
-    }, []);
 
     const location = useLocation();
     const pathname = location.pathname;

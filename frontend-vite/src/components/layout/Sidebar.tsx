@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/client';
 import { NotificationBell } from '../shared/NotificationBell';
 
 import { usePlatform } from '@/contexts/PlatformContext';
+import { useAuth } from '@/lib/hooks/useAuth';
 
 const menuItems = [
     { href: '/dashboard', label: 'Dashboard', icon: Home, isPremium: false },
@@ -35,27 +36,13 @@ export function Sidebar() {
     const navigate = useNavigate();
     const supabase = createClient();
     const { platformName, platformLogo } = usePlatform();
-    const [isPremium, setIsPremium] = useState(false);
-    const [role, setRole] = useState('user');
-    const [profileName, setProfileName] = useState('Usuário');
-    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+    const { profile: authProfile } = useAuth();
 
-    useEffect(() => {
-        async function loadProfile() {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                const { data } = await supabase.from('profiles').select('role, plan, full_name').eq('id', user.id).single();
-                if (data) {
-                    setRole(data.role);
-                    if (data.full_name) {
-                        setProfileName(data.full_name.split(' ')[0]);
-                    }
-                    if (data.plan !== 'free') setIsPremium(true);
-                }
-            }
-        }
-        loadProfile();
-    }, [supabase]);
+    const isPremium = authProfile?.plan !== 'free' && !!authProfile;
+    const role = authProfile?.role || 'user';
+    const profileName = authProfile?.full_name ? authProfile.full_name.split(' ')[0] : 'Usuário';
+
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
     const handleSignOut = async () => {
         await supabase.auth.signOut();

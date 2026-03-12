@@ -18,11 +18,13 @@ import { UpgradeModal } from '@/components/shared/UpgradeModal';
 import { useNavigate } from 'react-router-dom';
 import { createClient } from '@/lib/supabase/client';
 import { useModal } from '@/contexts/ModalContext';
+import { useAuth } from '@/lib/hooks/useAuth';
 import { AlertTriangle } from 'lucide-react';
 
 export default function ProfilePage() {
     const navigate = useNavigate();
     const { showAlert } = useModal();
+    const { fetchProfile } = useAuth();
     const supabase = createClient();
     const [isPremium, setIsPremium] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -190,7 +192,10 @@ export default function ProfilePage() {
         if (profErr) errorMsg = 'Erro ao atualizar perfil.';
 
         if (errorMsg) showAlert('Erro', errorMsg);
-        else if (email === user.email) showAlert('Salvo', 'Informações pessoais atualizadas!');
+        else if (email === user.email) {
+            showAlert('Salvo', 'Informações pessoais atualizadas!');
+            await fetchProfile(user.id);
+        }
         
         setSalvandoPessoal(false);
     };
