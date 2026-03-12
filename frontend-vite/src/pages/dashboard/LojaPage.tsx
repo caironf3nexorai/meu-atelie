@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -215,9 +216,9 @@ export default function StorePage() {
             </section>
 
             {/* ===== MODAL DE CHECKOUT ===== */}
-            {selectedPkg && (
-                <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
-                    <div className="bg-white rounded-[2rem] w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl relative">
+            {selectedPkg && createPortal(
+                <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={closeCheckout}>
+                    <div className="bg-white rounded-[2rem] w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl relative" onClick={e => e.stopPropagation()}>
 
                         {/* Header */}
                         <div className="sticky top-0 bg-white rounded-t-[2rem] p-5 sm:p-6 border-b border-border-light z-10">
@@ -442,7 +443,7 @@ export default function StorePage() {
                         </div>
                     </div>
                 </div>
-            )}
+            , document.body)}
         </div>
     );
 }
