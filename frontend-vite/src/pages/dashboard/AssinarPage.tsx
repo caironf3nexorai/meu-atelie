@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AlertCircle, CreditCard, Loader2, CheckCircle2, Lock } from 'lucide-react';
 import { maskCPF, maskPhone, maskCEP, maskCreditCard, maskExpiry, maskCVV, getCardFlag } from '@/lib/utils/masks';
+import { useToast } from '@/hooks/use-toast';
 
 const checkoutSchema = z.object({
     fullName: z.string().min(3, 'Nome muito curto.'),
@@ -33,6 +34,7 @@ export default function AssinarPage() {
     const supabase = createClient();
     const { user, profile } = useAuth();
     const { showAlert } = useModal();
+    const { toast } = useToast();
 
     const [errorMsg, setErrorMsg] = useState('');
     const [loadingCep, setLoadingCep] = useState(false);
@@ -47,9 +49,14 @@ export default function AssinarPage() {
     } | null>(null);
 
     const [searchParams] = useSearchParams();
-    const cupomUrl = searchParams.get('cupom');
+    const [codigoCupom, setCodigoCupom] = useState(
+        new URLSearchParams(window.location.search).get('cupom') || ''
+    );
+    const [cupomValido, setCupomValido] = useState<null | { desconto: number; id: string }>(null);
+    const [verificandoCupom, setVerificandoCupom] = useState(false);
+    
+    // Para manter compatibilidade com o resto do código original caso use cupomInfo em outro local
     const [cupomInfo, setCupomInfo] = useState<any>(null);
-    const [cupomEsgotado, setCupomEsgotado] = useState(false);
 
     const { register, handleSubmit, setValue, trigger, reset, formState: { errors, isSubmitting } } = useForm<CheckoutForm>({
         resolver: zodResolver(checkoutSchema),
@@ -86,33 +93,56 @@ export default function AssinarPage() {
         fetchPlanConfig();
     }, [supabase]);
 
-    useEffect(() => {
-        if (!cupomUrl) return;
+    const handleVerificarCupom = async () => {
+        if (!codigoCupom.trim()) return;
+        setVerificandoCupom(true);
 
-        const verificarCupom = async () => {
-            try {
-                const res = await fetch(
-                    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verificar-cupom`,
-                    {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ code: cupomUrl })
-                    }
-                );
-                const data = await res.json();
+        try {
+            const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verificar-cupom`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: codigoCupom.toUpperCase() })
+            });
+            const data = await res.json();
 
-                if (data.valid) {
-                    setCupomInfo(data);
-                } else if (data.esgotado) {
-                    setCupomEsgotado(true);
-                }
-            } catch (err) {
-                console.error('Erro ao verificar', err);
+            if (data.valid) {
+                setCupomValido({ desconto: data.discount_value, id: data.id });
+                setCupomInfo(data); // atualiza state legado q printa UI do cupomInfo original
+                toast({ title: 'Sucesso', description: `Cupom aplicado! R$${data.discount_value}/mês` });
+            } else {
+                setCupomValido(null);
+                setCupomInfo(null);
+                toast({ title: 'Aviso', description: 'Cupom inválido ou esgotado', variant: 'destructive' });
             }
-        };
+        } catch (error) {
+            console.error(error);
+            toast({ title: 'Erro', description: 'Erro ao verificar cupom', variant: 'destructive' });
+        }
+        setVerificandoCupom(false);
+    };
 
-        verificarCupom();
-    }, [cupomUrl]);
+    useEffect(() => {
+        const cupomUrlValue = new URLSearchParams(window.location.search).get('cupom');
+        if (cupomUrlValue) {
+            setCodigoCupom(cupomUrlValue.toUpperCase());
+            // Auto verificar após meio segundo
+            setTimeout(() => {
+                // Como handleVerificarCupom usa o state, e state num useEffect de mount inicial
+                // vai ser o inicial, passamos o fetch manual aqui pro load
+                fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verificar-cupom`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: cupomUrlValue.toUpperCase() })
+                }).then(res => res.json()).then(data => {
+                    if (data.valid) {
+                        setCupomValido({ desconto: data.discount_value, id: data.id });
+                        setCupomInfo(data);
+                        toast({ title: 'Sucesso', description: `Cupom auto-aplicado! R$${data.discount_value}/mês` });
+                    }
+                }).catch(console.error);
+            }, 500);
+        }
+    }, []);
 
     const buscarCEP = async (e: React.FocusEvent<HTMLInputElement>) => {
         let cep = e.target.value.replace(/\D/g, '');
@@ -485,6 +515,43 @@ export default function AssinarPage() {
                 {/* RESUMO DO PEDIDO */}
                 <div className="bg-[#2D2D2D] text-white rounded-2xl p-6 shadow-xl sticky top-24">
                     <h3 className="font-display text-2xl font-bold mb-6 text-[#DED181]">Meu Ateliê Premium</h3>
+
+                    {/* Campo de Cupom Manual */}
+                    <div style={{ background: '#F2E9DB', borderRadius: '14px', padding: '16px', marginBottom: '20px' }}>
+                        <label style={{ fontWeight: 700, fontSize: '13px', color: '#1A1A1A', display: 'block', marginBottom: '10px' }}>
+                            🎁 Tem um cupom de desconto?
+                        </label>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <input
+                                value={codigoCupom}
+                                onChange={e => setCodigoCupom(e.target.value.toUpperCase())}
+                                placeholder="Digite o código"
+                                style={{ flex: 1, padding: '10px 14px', borderRadius: '10px',
+                                border: `1px solid ${cupomValido ? '#16A34A' : '#E5D9CC'}`,
+                                fontFamily: 'Nunito', fontSize: '14px', fontWeight: 700, letterSpacing: '1px', color: '#1A1A1A', background: 'white' }}
+                            />
+                            <button onClick={handleVerificarCupom} disabled={verificandoCupom} type="button"
+                                style={{ padding: '10px 16px', borderRadius: '10px', background: '#AC5148',
+                                color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '13px', opacity: verificandoCupom ? 0.7 : 1 }}>
+                                {verificandoCupom ? '...' : 'Aplicar'}
+                            </button>
+                        </div>
+
+                        {/* Feedback do cupom */}
+                        {cupomValido && (
+                            <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{ color: '#16A34A', fontSize: '13px', fontWeight: 700 }}>
+                                    ✅ Cupom {codigoCupom || 'aplicado'}!
+                                </span>
+                                <span style={{ color: '#16A34A', fontWeight: 800 }}>
+                                    R${cupomValido.desconto}/mês
+                                    <span style={{ textDecoration: 'line-through', color: '#AAAAAA', marginLeft: '8px', fontSize: '12px' }}>
+                                        R${Math.floor(planPrice)}
+                                    </span>
+                                </span>
+                            </div>
+                        )}
+                    </div>
 
                     <div className="flex flex-col mb-8 pb-6 border-b border-white/10">
                         {cupomInfo ? (

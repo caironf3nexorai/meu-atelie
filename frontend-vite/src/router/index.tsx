@@ -61,6 +61,7 @@ const AuthLayout = React.lazy(() => import('@/components/layout/AuthLayout'));
 const OrcamentoPublicoPage = React.lazy(() => import('@/pages/public/OrcamentoPublicoPage'));
 const TermosDeUsoPage = React.lazy(() => import('@/pages/public/TermosDeUsoPage'));
 const PrivacidadePage = React.lazy(() => import('@/pages/public/PrivacidadePage'));
+const ResetarSenhaPage = React.lazy(() => import('@/pages/public/ResetarSenhaPage'));
 
 const router = createBrowserRouter([
     {
@@ -78,6 +79,10 @@ const router = createBrowserRouter([
     {
         path: '/privacidade',
         element: <PrivacidadePage />
+    },
+    {
+        path: '/resetar-senha',
+        element: <ResetarSenhaPage />
     },
     {
         element: <AuthLayout />,

@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { usePlatform } from '@/contexts/PlatformContext';
+import { useToast } from '@/hooks/use-toast';
 
 const loginSchema = z.object({
     email: z.string().email({ message: 'E-mail inválido.' }),
@@ -24,7 +25,9 @@ export default function LoginPage() {
     const [errorMsg, setErrorMsg] = useState('');
     const { platformName, platformLogo } = usePlatform();
 
-    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginForm>({
+    const { toast } = useToast();
+
+    const { register, handleSubmit, getValues, formState: { errors, isSubmitting } } = useForm<LoginForm>({
         resolver: zodResolver(loginSchema)
     });
 
@@ -98,9 +101,29 @@ export default function LoginPage() {
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
                         <Label htmlFor="password" className="text-text font-medium">Senha</Label>
-                        <Link to="/reset-senha" className="text-xs font-semibold text-primary hover:text-primary-dark transition-colors">
+                        <button 
+                            type="button" 
+                            onClick={async () => {
+                                const email = getValues('email');
+                                if (!email || !email.trim()) {
+                                    toast({ title: 'Atenção', description: 'Digite seu email primeiro', variant: 'destructive' });
+                                    return;
+                                }
+
+                                const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                                    redirectTo: `${import.meta.env.VITE_APP_URL || window.location.origin}/resetar-senha`
+                                });
+
+                                if (!error) {
+                                    toast({ title: 'Sucesso!', description: 'Email de recuperação enviado! Verifique sua caixa de entrada.' });
+                                } else {
+                                    toast({ title: 'Erro', description: 'Erro ao enviar email. Tente novamente.', variant: 'destructive' });
+                                }
+                            }} 
+                            className="text-xs font-semibold text-primary hover:text-primary-dark transition-colors"
+                        >
                             Esqueci a senha
-                        </Link>
+                        </button>
                     </div>
                     <Input
                         id="password"
