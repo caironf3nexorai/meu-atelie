@@ -64,13 +64,13 @@ export function TopBar() {
             <header className="fixed top-0 left-0 right-0 h-16 bg-[#F7E1D7] border-b border-black/10 z-30 lg:hidden flex items-center justify-between px-4 shadow-sm">
                 <Sheet open={open} onOpenChange={setOpen}>
                     <SheetTrigger asChild>
-                        <button className="p-2 -ml-2 text-[#2D2D2D] hover:bg-[#C9BC6A] rounded-full transition-colors">
+                        <button className="p-2 -ml-2 text-[#2D2D2D] hover:bg-[#E2C5B9] rounded-full transition-colors">
                             <Menu className="w-6 h-6" />
                         </button>
                     </SheetTrigger>
                     <SheetContent side="left" className="w-[280px] sm:w-[320px] p-0 bg-[#F7E1D7] border-r border-black/10 flex flex-col">
                         {/* Brand */}
-                        <Link to="/dashboard" onClick={() => setOpen(false)} className="pt-6 pb-4 px-6 flex items-center gap-3 border-b border-black/10 hover:bg-[#C9BC6A]/40 transition-colors">
+                        <Link to="/dashboard" onClick={() => setOpen(false)} className="pt-6 pb-4 px-6 flex items-center gap-3 border-b border-black/10 hover:bg-[#E2C5B9]/40 transition-colors">
                             <img
                                 src={platformLogo || '/logo.png'}
                                 alt={`Logo ${platformName}`}
@@ -95,7 +95,7 @@ export function TopBar() {
                                             'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 font-ui text-sm group text-left relative',
                                             isActive
                                                 ? 'bg-[#AC5148] text-white font-medium shadow-sm'
-                                                : 'text-[#2D2D2D] hover:bg-[#C9BC6A] hover:text-[#2D2D2D]',
+                                                : 'text-[#2D2D2D] hover:bg-[#E2C5B9] hover:text-[#2D2D2D]',
                                             isLocked && 'opacity-60'
                                         )}
                                     >
@@ -114,7 +114,7 @@ export function TopBar() {
                                         'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 font-ui text-sm group text-left relative mt-3',
                                         pathname.startsWith('/admin')
                                             ? 'bg-[#AC5148] text-white font-medium shadow-sm'
-                                            : 'text-[#2D2D2D] hover:bg-[#C9BC6A] hover:text-[#2D2D2D]'
+                                            : 'text-[#2D2D2D] hover:bg-[#E2C5B9] hover:text-[#2D2D2D]'
                                     )}
                                 >
                                     <Shield className={cn("w-5 h-5 shrink-0", pathname.startsWith('/admin') ? 'text-white' : 'text-[#2D2D2D]/70 group-hover:text-[#2D2D2D]')} />
@@ -123,7 +123,7 @@ export function TopBar() {
                             )}
                         </nav>
                         <div className="p-4 border-t border-black/10 bg-[#F7E1D7]">
-                            <button onClick={handleSignOut} className="flex items-center justify-center gap-2 w-full p-2 text-sm text-[#2D2D2D]/60 hover:text-[#2D2D2D] transition-colors rounded-lg hover:bg-[#C9BC6A] border border-transparent hover:border-black/10">
+                            <button onClick={handleSignOut} className="flex items-center justify-center gap-2 w-full p-2 text-sm text-[#2D2D2D]/60 hover:text-[#2D2D2D] transition-colors rounded-lg hover:bg-[#E2C5B9] border border-transparent hover:border-black/10">
                                 <LogOut className="w-4 h-4" /> Sair da Conta
                             </button>
                         </div>

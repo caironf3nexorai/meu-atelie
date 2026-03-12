@@ -558,7 +558,7 @@ video {
   --color-primary: #AC5148;
   --color-primary-hover: #8E3F37;
   --color-secondary: #F7E1D7;
-  --color-secondary-hover: #C9BC6A;
+  --color-secondary-hover: #E2C5B9;
   --color-accent: #C29A51;
   --color-background: #F2E9DB;
   --color-surface: #FFFFFF;
@@ -2124,7 +2124,7 @@ h1,
   background-color: rgb(172 81 72 / 0.5);
 }
 
-.bg-\[\#C9BC6A\]\/40 {
+.bg-\[\#E2C5B9\]\/40 {
   background-color: rgb(201 188 106 / 0.4);
 }
 
@@ -3634,12 +3634,12 @@ h1,
   background-color: rgb(172 81 72 / 0.2);
 }
 
-.hover\:bg-\[\#C9BC6A\]:hover {
+.hover\:bg-\[\#E2C5B9\]:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(201 188 106 / var(--tw-bg-opacity, 1));
 }
 
-.hover\:bg-\[\#C9BC6A\]\/40:hover {
+.hover\:bg-\[\#E2C5B9\]\/40:hover {
   background-color: rgb(201 188 106 / 0.4);
 }
 

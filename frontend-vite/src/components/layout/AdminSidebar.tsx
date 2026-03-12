@@ -70,7 +70,7 @@ export function AdminSidebar() {
                                 'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 font-ui text-sm group text-left',
                                 isActive
                                     ? 'bg-[#AC5148] text-white font-medium shadow-sm'
-                                    : 'text-[#2D2D2D] hover:bg-[#C9BC6A] hover:text-[#2D2D2D]'
+                                    : 'text-[#2D2D2D] hover:bg-[#E2C5B9] hover:text-[#2D2D2D]'
                             )}
                         >
                             <item.icon className={cn("w-5 h-5 shrink-0", isActive ? 'text-white' : 'text-[#2D2D2D]/70 group-hover:text-[#2D2D2D]')} />
@@ -81,7 +81,7 @@ export function AdminSidebar() {
             </nav>
 
             <div className="p-4 border-t border-black/10 bg-[#F7E1D7]">
-                <div className="p-3 bg-[#C9BC6A]/40 rounded-xl border border-black/10 flex items-center gap-3 shadow-sm mb-3">
+                <div className="p-3 bg-[#E2C5B9]/40 rounded-xl border border-black/10 flex items-center gap-3 shadow-sm mb-3">
                     <div className="w-10 h-10 rounded-full bg-[#AC5148] flex items-center justify-center text-white font-display flex-shrink-0 uppercase font-bold shadow-sm">
                         {profileName.charAt(0)}
                     </div>

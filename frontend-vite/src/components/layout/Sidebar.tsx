@@ -67,7 +67,7 @@ export function Sidebar() {
             <aside className="hidden lg:flex flex-col w-[260px] h-screen fixed top-0 left-0 bg-[#F7E1D7] border-r border-black/10 z-20 shadow-md">
 
                 {/* CABEÇALHO COM LOGO */}
-                <Link to="/dashboard" className="pt-6 pb-6 px-6 flex flex-col items-center justify-center border-b border-black/10 shrink-0 group hover:bg-[#C9BC6A]/40 transition-colors">
+                <Link to="/dashboard" className="pt-6 pb-6 px-6 flex flex-col items-center justify-center border-b border-black/10 shrink-0 group hover:bg-[#E2C5B9]/40 transition-colors">
                     <img
                         src={platformLogo || '/logo.png'}
                         alt={`Logo ${platformName}`}
@@ -91,7 +91,7 @@ export function Sidebar() {
                                         'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 font-ui text-sm group text-left relative',
                                         isActive
                                             ? 'bg-[#AC5148] text-white font-medium shadow-sm'
-                                            : 'text-[#2D2D2D] hover:bg-[#C9BC6A] hover:text-[#2D2D2D]'
+                                            : 'text-[#2D2D2D] hover:bg-[#E2C5B9] hover:text-[#2D2D2D]'
                                     )}>
                                         <item.icon className={cn("w-4 h-4 shrink-0", isActive ? 'text-white' : 'text-[#2D2D2D]/70 group-hover:text-[#2D2D2D]')} />
                                         <span className="flex-1">{item.label}</span>
@@ -116,7 +116,7 @@ export function Sidebar() {
                                         'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 font-ui text-sm group text-left relative',
                                         isActive
                                             ? 'bg-[#AC5148] text-white font-medium shadow-sm'
-                                            : 'text-[#2D2D2D] hover:bg-[#C9BC6A] hover:text-[#2D2D2D]',
+                                            : 'text-[#2D2D2D] hover:bg-[#E2C5B9] hover:text-[#2D2D2D]',
                                         isLocked && 'opacity-60'
                                     )}>
                                         <item.icon className={cn("w-4 h-4 shrink-0", isActive ? 'text-white' : 'text-[#2D2D2D]/70 group-hover:text-[#2D2D2D]')} />
@@ -138,7 +138,7 @@ export function Sidebar() {
                                 'flex-1 flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 font-ui text-sm group text-left relative',
                                 pathname.startsWith('/perfil')
                                     ? 'bg-[#AC5148] text-white font-medium shadow-sm'
-                                    : 'text-[#2D2D2D] hover:bg-[#C9BC6A] hover:text-[#2D2D2D]'
+                                    : 'text-[#2D2D2D] hover:bg-[#E2C5B9] hover:text-[#2D2D2D]'
                             )}>
                                 <User className={cn("w-4 h-4 shrink-0", pathname.startsWith('/perfil') ? 'text-white' : 'text-[#2D2D2D]/70 group-hover:text-[#2D2D2D]')} />
                                 <span className="flex-1">Meu Perfil</span>
@@ -153,7 +153,7 @@ export function Sidebar() {
                                 'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 font-ui text-sm group text-left relative',
                                 pathname.startsWith('/admin')
                                     ? 'bg-[#AC5148] text-white font-medium shadow-sm'
-                                    : 'text-[#2D2D2D] hover:bg-[#C9BC6A] hover:text-[#2D2D2D]'
+                                    : 'text-[#2D2D2D] hover:bg-[#E2C5B9] hover:text-[#2D2D2D]'
                             )}>
                                 <Shield className={cn("w-4 h-4 shrink-0", pathname.startsWith('/admin') ? 'text-white' : 'text-[#2D2D2D]/70 group-hover:text-[#2D2D2D]')} />
                                 <span className="flex-1">Painel Admin</span>
@@ -162,7 +162,7 @@ export function Sidebar() {
                     </div>
 
                     {/* CARD DO USUÁRIO */}
-                    <div className="p-3 bg-[#C9BC6A]/40 rounded-xl border border-black/10 flex items-center gap-3 shadow-sm relative group">
+                    <div className="p-3 bg-[#E2C5B9]/40 rounded-xl border border-black/10 flex items-center gap-3 shadow-sm relative group">
                         <div className="w-9 h-9 rounded-full bg-[#AC5148] flex items-center justify-center text-white font-display flex-shrink-0 uppercase font-bold text-sm shadow-sm">
                             {profileName.charAt(0)}
                         </div>

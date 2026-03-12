@@ -41,6 +41,22 @@ export default function ProfilePage() {
     const [atelieLogoUrl, setAtelieLogoUrl] = useState('');
     const [uploadingLogo, setUploadingLogo] = useState(false);
 
+    // Estados Pessoais
+    const [nome, setNome] = useState('');
+    const [email, setEmail] = useState('');
+    const [cpf, setCpf] = useState('');
+    const [celular, setCelular] = useState('');
+    const [salvandoPessoal, setSalvandoPessoal] = useState(false);
+
+    // Estados Endereço
+    const [cep, setCep] = useState('');
+    const [rua, setRua] = useState('');
+    const [numero, setNumero] = useState('');
+    const [bairro, setBairro] = useState('');
+    const [cidade, setCidade] = useState('');
+    const [estadoUF, setEstadoUF] = useState('');
+    const [salvandoEndereco, setSalvandoEndereco] = useState(false);
+
     useEffect(() => {
         async function fetchData() {
             const { data: { user } } = await supabase.auth.getUser();
@@ -57,7 +73,19 @@ export default function ProfilePage() {
                     setAtelieCidade(prof.atelie_cidade || '');
                     setAtelieEstado(prof.atelie_estado || '');
                     setAtelieLogoUrl(prof.atelie_logo_url || '');
+
+                    setNome(prof.full_name || '');
+                    setCpf(prof.cpf || '');
+                    setCelular(prof.phone || '');
+
+                    setCep(prof.address_zip || '');
+                    setRua(prof.address_street || '');
+                    setNumero(prof.address_number || '');
+                    setBairro(prof.address_neighborhood || '');
+                    setCidade(prof.address_city || '');
+                    setEstadoUF(prof.address_state || '');
                 }
+                if (user) setEmail(user.email || '');
 
                 const { data: pays } = await supabase.from('invoices').select('*').eq('user_id', user.id).order('paid_at', { ascending: false });
                 setHistory(pays || []);
@@ -139,6 +167,54 @@ export default function ProfilePage() {
         }
     }
 
+    const handleSavePersonal = async () => {
+        setSalvandoPessoal(true);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        let errorMsg: string | null = null;
+
+        // Tentar atualizar email no auth (se mudou)
+        if (email !== user.email) {
+            const { error: mailErr } = await supabase.auth.updateUser({ email });
+            if (mailErr) errorMsg = 'Erro ao atualizar email: ' + mailErr.message;
+            else showAlert('Aviso', 'Um email de confirmação foi enviado para validar a troca do e-mail.');
+        }
+
+        // Atualizar Nome e Telefone
+        const { error: profErr } = await supabase.from('profiles').update({
+            full_name: nome,
+            phone: celular
+        }).eq('id', user.id);
+
+        if (profErr) errorMsg = 'Erro ao atualizar perfil.';
+
+        if (errorMsg) showAlert('Erro', errorMsg);
+        else if (email === user.email) showAlert('Salvo', 'Informações pessoais atualizadas!');
+        
+        setSalvandoPessoal(false);
+    };
+
+    const handleSaveAddress = async () => {
+        setSalvandoEndereco(true);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { error } = await supabase.from('profiles').update({
+            address_zip: cep,
+            address_street: rua,
+            address_number: numero,
+            address_neighborhood: bairro,
+            address_city: cidade,
+            address_state: estadoUF
+        }).eq('id', user.id);
+
+        if (error) showAlert('Erro', 'Erro ao atualizar endereço.');
+        else showAlert('Salvo', 'Endereço atualizado com sucesso!');
+
+        setSalvandoEndereco(false);
+    };
+
     if (loading) {
         return <div className="p-12 text-center text-text-light font-ui animate-pulse">Carregando perfil...</div>;
     }
@@ -176,24 +252,28 @@ export default function ProfilePage() {
                     <TabsContent value="personal" className="space-y-6 animate-in fade-in">
                         <h3 className="font-display text-2xl text-text mb-4">Informações Pessoais</h3>
                         <div className="grid sm:grid-cols-2 gap-6">
-                            <div className="space-y-2"><Label>Nome Completo</Label><Input defaultValue={profile?.full_name || ''} className="rounded-xl h-11" /></div>
-                            <div className="space-y-2"><Label>E-mail</Label><Input defaultValue={profile?.email || ''} disabled className="rounded-xl h-11 bg-background" /></div>
-                            <div className="space-y-2"><Label>CPF</Label><Input defaultValue={profile?.cpf || ''} className="rounded-xl h-11" /></div>
-                            <div className="space-y-2"><Label>Celular / WhatsApp</Label><Input defaultValue={profile?.phone || ''} className="rounded-xl h-11" /></div>
+                            <div className="space-y-2"><Label>Nome Completo</Label><Input value={nome} onChange={e => setNome(e.target.value)} className="rounded-xl h-11" /></div>
+                            <div className="space-y-2"><Label>E-mail</Label><Input value={email} onChange={e => setEmail(e.target.value)} className="rounded-xl h-11" /></div>
+                            <div className="space-y-2"><Label>CPF</Label><Input value={cpf} disabled className="rounded-xl h-11 bg-background opacity-70" /></div>
+                            <div className="space-y-2"><Label>Celular / WhatsApp</Label><Input value={celular} onChange={e => setCelular(e.target.value)} className="rounded-xl h-11" /></div>
                         </div>
-                        <Button className="mt-6 rounded-full px-8 bg-primary hover:bg-primary-dark">Salvar Alterações</Button>
+                        <Button onClick={handleSavePersonal} disabled={salvandoPessoal} className="mt-6 rounded-full px-8 bg-primary hover:bg-primary-dark">
+                            {salvandoPessoal ? 'Salvando...' : 'Salvar Alterações'}
+                        </Button>
                     </TabsContent>
 
                     <TabsContent value="address" className="space-y-6 animate-in fade-in">
                         <h3 className="font-display text-2xl text-text mb-4">Localização do Ateliê</h3>
                         <div className="grid sm:grid-cols-3 gap-6">
-                            <div className="space-y-2"><Label>CEP</Label><Input defaultValue={profile?.address_zip || ''} className="rounded-xl h-11" /></div>
-                            <div className="col-span-2 space-y-2"><Label>Rua / Logradouro</Label><Input defaultValue={profile?.address_street || ''} className="rounded-xl h-11" /></div>
-                            <div className="space-y-2"><Label>Número</Label><Input defaultValue={profile?.address_number || ''} className="rounded-xl h-11" /></div>
-                            <div className="space-y-2"><Label>Bairro</Label><Input defaultValue={profile?.address_neighborhood || ''} className="rounded-xl h-11" /></div>
-                            <div className="space-y-2"><Label>Cidade/UF</Label><Input defaultValue={profile?.address_city ? `${profile.address_city} - ${profile.address_state || ''}` : ''} className="rounded-xl h-11" /></div>
+                            <div className="space-y-2"><Label>CEP</Label><Input value={cep} onChange={e => setCep(e.target.value)} className="rounded-xl h-11" /></div>
+                            <div className="col-span-2 space-y-2"><Label>Rua / Logradouro</Label><Input value={rua} onChange={e => setRua(e.target.value)} className="rounded-xl h-11" /></div>
+                            <div className="space-y-2"><Label>Número</Label><Input value={numero} onChange={e => setNumero(e.target.value)} className="rounded-xl h-11" /></div>
+                            <div className="space-y-2"><Label>Bairro</Label><Input value={bairro} onChange={e => setBairro(e.target.value)} className="rounded-xl h-11" /></div>
+                            <div className="space-y-2"><Label>Cidade/UF</Label><Input value={cidade} onChange={e => setCidade(e.target.value)} placeholder="Ex: Belo Horizonte/MG" className="rounded-xl h-11" /></div>
                         </div>
-                        <Button className="mt-6 rounded-full px-8 bg-primary hover:bg-primary-dark">Atualizar Endereço</Button>
+                        <Button onClick={handleSaveAddress} disabled={salvandoEndereco} className="mt-6 rounded-full px-8 bg-primary hover:bg-primary-dark">
+                            {salvandoEndereco ? 'Atualizando...' : 'Atualizar Endereço'}
+                        </Button>
                     </TabsContent>
 
                     <TabsContent value="security" className="space-y-6 animate-in fade-in max-w-md">
