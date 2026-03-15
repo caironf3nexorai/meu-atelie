@@ -63,7 +63,7 @@ export default function OrcamentoPublicoPage() {
 
     const handleAprovar = async () => {
         setStatus('aprovando')
-        await supabase
+        const { data, error } = await supabase
             .from('orcamentos')
             .update({
                 status: 'aceito',
@@ -71,6 +71,21 @@ export default function OrcamentoPublicoPage() {
                 cliente_observacoes: observacoes || null
             })
             .eq('token_publico', token)
+            .select()
+
+        if (error) {
+            console.error('Erro ao aprovar:', error)
+            showAlert('Erro', 'Erro ao aprovar. Tente novamente.')
+            setStatus('idle')
+            return
+        }
+
+        // Verificar se realmente atualizou
+        if (!data || data.length === 0) {
+            showAlert('Erro', 'Não foi possível salvar a aprovação. Verifique sua conexão e tente novamente.')
+            setStatus('idle')
+            return
+        }
 
         // Notificar artesã
         await supabase.from('notificacoes').insert({
@@ -87,7 +102,7 @@ export default function OrcamentoPublicoPage() {
 
     const handleRecusar = async () => {
         setStatus('recusando')
-        await supabase
+        const { data, error } = await supabase
             .from('orcamentos')
             .update({
                 status: 'recusado',
@@ -95,6 +110,20 @@ export default function OrcamentoPublicoPage() {
                 motivo_recusa: motivoRecusa || null
             })
             .eq('token_publico', token)
+            .select()
+
+        if (error) {
+            console.error('Erro ao recusar:', error)
+            showAlert('Erro', 'Erro ao recusar. Tente novamente.')
+            setStatus('idle')
+            return
+        }
+
+        if (!data || data.length === 0) {
+            showAlert('Erro', 'Não foi possível salvar a recusa. Verifique sua conexão e tente novamente.')
+            setStatus('idle')
+            return
+        }
 
         await supabase.from('notificacoes').insert({
             user_id: orcamento.user_id,

@@ -45,25 +45,40 @@ export default function OrcamentosPage() {
     const [encomendaId, setEncomendaId] = useState<string>('');
 
     useEffect(() => {
-        fetchData();
+        let channel: any;
 
-        // Ouve atualizações em tempo real (ex: quando o cliente aprova/recusa no link público)
-        const channel = supabase
-            .channel('orcamentos_changes')
-            .on(
-                'postgres_changes',
-                { event: 'UPDATE', schema: 'public', table: 'orcamentos' },
-                (payload) => {
-                    const novoRegistro = payload.new as any;
-                    setOrcamentos(prev => prev.map(orc =>
-                        orc.id === novoRegistro.id ? { ...orc, status: novoRegistro.status, arquivos_count: novoRegistro.arquivos_count || orc.arquivos_count } : orc
-                    ));
-                }
-            )
-            .subscribe();
+        const initRealtime = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            // Ouve atualizações em tempo real (ex: quando o cliente aprova/recusa no link público)
+            channel = supabase
+                .channel('orcamentos_changes')
+                .on(
+                    'postgres_changes',
+                    { 
+                        event: 'UPDATE', 
+                        schema: 'public', 
+                        table: 'orcamentos',
+                        filter: `user_id=eq.${user.id}`
+                    },
+                    (payload) => {
+                        const novoRegistro = payload.new as any;
+                        setOrcamentos(prev => prev.map(orc =>
+                            orc.id === novoRegistro.id ? { ...orc, ...novoRegistro } : orc
+                        ));
+                    }
+                )
+                .subscribe();
+        };
+
+        fetchData();
+        initRealtime();
 
         return () => {
-            supabase.removeChannel(channel);
+            if (channel) {
+                supabase.removeChannel(channel);
+            }
         };
     }, []);
 
