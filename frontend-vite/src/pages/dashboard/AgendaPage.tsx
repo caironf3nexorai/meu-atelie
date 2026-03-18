@@ -11,8 +11,10 @@ import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useModal } from '@/contexts/ModalContext';
+import { useLocation } from 'react-router-dom';
 
 export default function AgendaPage() {
+    const location = useLocation();
     const { showAlert, showConfirm } = useModal();
     const [orders, setOrders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -28,9 +30,12 @@ export default function AgendaPage() {
         delivery_date: '',
         value: 0,
         notes: '',
-        status: 'em_andamento' as 'em_andamento',
-        photo_url: null as string | null
+        status: 'em_aberto' as any,
+        photo_url: null as string | null,
+        orcamento_id: undefined as string | undefined
     });
+
+    const [prazoDiasExtra, setPrazoDiasExtra] = useState<number | null>(null);
 
     const [finishModalOpen, setFinishModalOpen] = useState(false);
     const [selectedOrderToFinish, setSelectedOrderToFinish] = useState<any>(null);
@@ -65,6 +70,57 @@ export default function AgendaPage() {
         gestaoApi.getInventory().then(setInventory).catch(console.error);
     }, []);
 
+    // Recepcionar dados do OrçamentosPage via location.state
+    useEffect(() => {
+        if (location.state?.novoAgendamento && clients.length > 0) {
+            const { client_id, description, value, notes, prazoDias, cliente_nome, orcamento_id } = location.state.novoAgendamento;
+            
+            let matchedClientId = client_id;
+            if (!matchedClientId && cliente_nome) {
+                const found = clients.find(c => c.name.toLowerCase() === cliente_nome.toLowerCase());
+                if (found) matchedClientId = found.id;
+            }
+
+            setFormData(prev => ({
+                ...prev,
+                client_id: matchedClientId || '',
+                description: description || '',
+                value: value || 0,
+                notes: notes || '',
+                orcamento_id: orcamento_id || undefined
+            }));
+            
+            if (prazoDias) {
+                const matches = prazoDias.match(/\d+/);
+                if (matches) {
+                    setPrazoDiasExtra(Number(matches[0]));
+                }
+            }
+            
+            setIsCreateOpen(true);
+            window.history.replaceState({}, document.title);
+        }
+    }, [location.state, clients]);
+
+    // Calcular data de entrega automática baseada no prazo do orçamento
+    useEffect(() => {
+        if (formData.start_date && prazoDiasExtra && formData.start_date.length === 10) {
+            const yearAsNumber = parseInt(formData.start_date.split('-')[0], 10);
+            if (yearAsNumber >= 2000) {
+                const startDate = new Date(formData.start_date + 'T12:00:00Z');
+                // Adiciona dias corridos baseado no numero extraído
+                startDate.setDate(startDate.getDate() + prazoDiasExtra);
+                const yyyy = startDate.getFullYear();
+                const mm = String(startDate.getMonth() + 1).padStart(2, '0');
+                const dd = String(startDate.getDate()).padStart(2, '0');
+                
+                setFormData(prev => ({ ...prev, delivery_date: `${yyyy}-${mm}-${dd}` }));
+                setPrazoDiasExtra(null); // Limpa para não recalcular se o user mexer dps
+                showAlert('Prazo Calculado', `A data de entrega foi definida automaticamente para somar os ${prazoDiasExtra} dias do orçamento.`);
+            }
+        }
+    }, [formData.start_date]);
+
     async function loadOrders() {
         try {
             const data = await gestaoApi.getOrders();
@@ -89,7 +145,7 @@ export default function AgendaPage() {
             // Reload para trazer client joinado
             await loadOrders();
             setIsCreateOpen(false);
-            setFormData({ client_id: '', description: '', start_date: '', delivery_date: '', value: 0, notes: '', status: 'em_andamento' as 'em_andamento', photo_url: null });
+            setFormData({ client_id: '', description: '', start_date: '', delivery_date: '', value: 0, notes: '', status: 'em_aberto' as any, photo_url: null, orcamento_id: undefined });
             setEditingOrderId(null);
         } catch (e) {
             console.error(e);
@@ -108,8 +164,9 @@ export default function AgendaPage() {
             delivery_date: order.delivery_date || '',
             value: order.value,
             notes: order.notes || '',
-            status: order.status,
-            photo_url: order.photo_url
+            status: order.status || 'em_aberto',
+            photo_url: order.photo_url,
+            orcamento_id: order.orcamento_id
         });
         setIsCreateOpen(true);
     }
@@ -209,7 +266,7 @@ export default function AgendaPage() {
     });
 
     return (
-        <div className="max-w-6xl mx-auto space-y-8 pb-12">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-8 pb-12">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="font-display text-3xl text-text">Agenda de Produção</h1>
@@ -219,7 +276,7 @@ export default function AgendaPage() {
                     setIsCreateOpen(open);
                     if (!open) {
                         setEditingOrderId(null);
-                        setFormData({ client_id: '', description: '', start_date: '', delivery_date: '', value: 0, notes: '', status: 'em_andamento' as 'em_andamento', photo_url: null });
+                        setFormData({ client_id: '', description: '', start_date: '', delivery_date: '', value: 0, notes: '', status: 'em_aberto' as any, photo_url: null, orcamento_id: undefined });
                     }
                 }}>
                     <DialogTrigger asChild>
@@ -228,7 +285,7 @@ export default function AgendaPage() {
                             Nova Encomenda
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-md">
+                    <DialogContent className="sm:max-w-md w-[95vw] max-h-[90vh] overflow-y-auto rounded-2xl">
                         <DialogHeader><DialogTitle>{editingOrderId ? 'Editar Encomenda' : 'Registrar Encomenda'}</DialogTitle></DialogHeader>
                         <form onSubmit={handleCreate} className="space-y-4 pt-4">
                             <div className="space-y-2">
@@ -251,6 +308,16 @@ export default function AgendaPage() {
                                     <Label>Data de Entrega</Label>
                                     <Input required type="date" value={formData.delivery_date} onChange={e => setFormData({ ...formData, delivery_date: e.target.value })} />
                                 </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Status da Encomenda</Label>
+                                <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value as any })} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                                    <option value="em_aberto">⏳ Em aberto</option>
+                                    <option value="em_andamento">🪡 Em andamento</option>
+                                    <option value="pronto">✅ Pronto</option>
+                                    <option value="entregue">📦 Entregue</option>
+                                    <option value="finalizado">✅ Finalizado (Estoque abatido)</option>
+                                </select>
                             </div>
                             <div className="space-y-2">
                                 <Label>Valor Cobrado (R$)</Label>
@@ -290,7 +357,8 @@ export default function AgendaPage() {
             </div>
 
             <Tabs defaultValue="lista" className="w-full">
-                <TabsList className="flex gap-2 w-full sm:w-auto overflow-x-auto border-0 bg-transparent p-0 mb-6 font-ui no-scrollbar">
+            <div className="sticky top-[-1px] z-30 bg-background/95 backdrop-blur-sm py-2 -mx-4 px-4 sm:relative sm:top-0 sm:bg-transparent sm:py-0 sm:mx-0 sm:px-0 sm:mb-6">
+                <TabsList className="flex gap-2 w-full justify-start overflow-x-auto border-0 bg-transparent p-0 font-ui no-scrollbar relative min-w-0 pr-4 -mx-1 px-1">
                     <TabsTrigger value="lista" className="rounded-full px-5 py-2 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=inactive]:bg-surface data-[state=inactive]:text-text data-[state=inactive]:border data-[state=inactive]:border-border-light shadow-sm transition-all whitespace-nowrap">
                         <List className="w-4 h-4 mr-2" /> Em Aberto
                     </TabsTrigger>
@@ -301,6 +369,7 @@ export default function AgendaPage() {
                         <Archive className="w-4 h-4 mr-2" /> Histórico
                     </TabsTrigger>
                 </TabsList>
+            </div>
 
                 <TabsContent value="lista" className="space-y-4 min-h-[400px]">
                     {loading ? (
@@ -397,12 +466,40 @@ export default function AgendaPage() {
                             <div className="py-2 hidden md:block">Sexta</div><div className="py-2 md:hidden">Sex</div>
                             <div className="py-2 hidden md:block">Sábado</div><div className="py-2 md:hidden">Sáb</div>
                         </div>
+
+                        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', padding: '12px 0', marginBottom: '16px' }}>
+                            {[
+                                { status: 'em_aberto', label: 'Em aberto' },
+                                { status: 'em_andamento', label: 'Em andamento' },
+                                { status: 'pronto', label: 'Pronto' },
+                                { status: 'entregue', label: 'Entregue' },
+                            ].map(item => (
+                                <div key={item.status} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <div style={{ width: '24px', height: '6px', borderRadius: '999px', background: ({'em_aberto': '#9CA3AF', 'em_andamento': '#C29A51', 'pronto': '#16A34A', 'entregue': '#AC5148', 'finalizado': '#16A34A'} as any)[item.status] || '#6B6B6B' }} />
+                                    <span style={{ fontSize: '12px', color: '#6B6B6B', fontWeight: 600 }}>{item.label}</span>
+                                </div>
+                            ))}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <div style={{ width: '24px', height: '6px', borderRadius: '999px', background: 'linear-gradient(to right, #C29A51, #16A34A)' }} />
+                                <span style={{ fontSize: '12px', color: '#6B6B6B', fontWeight: 600 }}>Período do bordado</span>
+                            </div>
+                        </div>
+
                         {/* Grid */}
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))' }} className="gap-2">
                             {Array.from({ length: firstDayOfMonth }).map((_, i) => <div key={`empty-${i}`} className="min-h-24 md:min-h-32 rounded-xl bg-surface-warm/30 border border-transparent" />)}
                             {Array.from({ length: daysInMonth }).map((_, i) => {
                                 const day = i + 1;
-                                const dailyOrders = ordersThisMonth.filter(o => new Date(o.delivery_date).getDate() === day);
+                                const currDate = new Date(currentYear, currentMonth, day);
+                                const dailyOrders = ordersThisMonth.filter(o => {
+                                    if (!o.delivery_date) return false;
+                                    const dEnd = new Date(o.delivery_date + 'T12:00:00Z'); dEnd.setHours(0,0,0,0);
+                                    if (o.start_date) {
+                                        const dStart = new Date(o.start_date + 'T12:00:00Z'); dStart.setHours(0,0,0,0);
+                                        return currDate >= dStart && currDate <= dEnd;
+                                    }
+                                    return dEnd.getDate() === day;
+                                });
                                 const hasOrders = dailyOrders.length > 0;
                                 const isSelected = selectedDay === day;
                                 const isToday = day === new Date().getDate() && currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear();
@@ -420,23 +517,49 @@ export default function AgendaPage() {
                                         {hasOrders && (
                                             <div className="mt-1 md:mt-2 flex flex-col gap-1 w-full px-1">
                                                 {/* Desktop Cards */}
-                                                <div className="hidden md:flex flex-col gap-1">
-                                                    {dailyOrders.slice(0, 3).map((o, idx) => (
-                                                        <div key={idx}
-                                                            onClick={(e) => { e.stopPropagation(); setSelectedHistoryOrder(o); setIsHistoryDrawerOpen(true); }}
-                                                            className={`text-[10px] text-left p-1 rounded-md cursor-pointer hover:opacity-80 transition-opacity ${o.status === 'em_andamento' ? 'bg-[#FFF9C4] text-[#82600B]' : o.status === 'finalizado' ? 'bg-[#D4EDDA] text-[#155724]' : 'bg-[#CCE5FF] text-[#004085]'}`}>
-                                                            <div className="font-bold truncate leading-tight">{o.clients?.name}</div>
-                                                            <div className="truncate opacity-90 leading-tight">{o.description?.length > 20 ? o.description.substring(0, 20) + '...' : o.description}</div>
-                                                        </div>
-                                                    ))}
+                                                <div className="hidden md:flex flex-col gap-1 w-full">
+                                                    {dailyOrders.slice(0, 3).map((o, idx) => {
+                                                        const isPeriod = Boolean(o.start_date);
+                                                        const dEnd = new Date(o.delivery_date + 'T12:00:00Z'); dEnd.setHours(0,0,0,0);
+                                                        const dStart = o.start_date ? new Date(o.start_date + 'T12:00:00Z') : null; if(dStart) dStart.setHours(0,0,0,0);
+                                                        
+                                                        const isStartDay = dStart && currDate.getTime() === dStart.getTime();
+                                                        const isEndDay = currDate.getTime() === dEnd.getTime();
+                                                        const isMiddle = isPeriod && !isStartDay && !isEndDay;
+                                                        
+                                                        const bg = ({'em_aberto': '#9CA3AF', 'em_andamento': '#C29A51', 'pronto': '#16A34A', 'entregue': '#AC5148', 'finalizado': '#16A34A'} as any)[o.status] || '#6B6B6B';
+                                                        
+                                                        return (
+                                                            <div key={idx}
+                                                                onClick={(e) => { e.stopPropagation(); setSelectedHistoryOrder(o); setIsHistoryDrawerOpen(true); }}
+                                                                className={`text-[10px] text-white p-1 cursor-pointer hover:opacity-80 transition-opacity font-medium pointer-events-auto z-10`}
+                                                                style={{ 
+                                                                    backgroundColor: bg,
+                                                                    width: isPeriod ? 'calc(100% + 16px)' : '100%',
+                                                                    marginLeft: isPeriod && !isStartDay ? '-8px' : '0',
+                                                                    marginRight: isPeriod && !isEndDay ? '-8px' : '0',
+                                                                    paddingLeft: isPeriod && !isStartDay ? '0' : '4px',
+                                                                    borderTopLeftRadius: isStartDay || !isPeriod ? '4px' : '0',
+                                                                    borderBottomLeftRadius: isStartDay || !isPeriod ? '4px' : '0',
+                                                                    borderTopRightRadius: isEndDay || !isPeriod ? '4px' : '0',
+                                                                    borderBottomRightRadius: isEndDay || !isPeriod ? '4px' : '0',
+                                                                    whiteSpace: 'nowrap',
+                                                                    overflow: 'hidden',
+                                                                    textOverflow: 'clip'
+                                                                }}>
+                                                                {(isStartDay || !isPeriod || currDate.getDay() === 0) ? <span className="truncate block">{o.clients?.name}</span> : <span className="opacity-0">{o.clients?.name}</span>}
+                                                            </div>
+                                                        );
+                                                    })}
                                                     {dailyOrders.length > 3 && <div className="text-[10px] text-text-muted text-center font-medium py-0.5">+{dailyOrders.length - 3} encomendas</div>}
                                                 </div>
 
                                                 {/* Mobile Dots */}
                                                 <div className="flex md:hidden flex-wrap justify-center gap-1 mt-1">
-                                                    {dailyOrders.slice(0, 4).map((o, idx) => (
-                                                        <div key={idx} className={`w-2 h-2 rounded-full ${o.status === 'em_andamento' ? 'bg-warn' : o.status === 'finalizado' ? 'bg-success' : 'bg-accent'}`} />
-                                                    ))}
+                                                    {dailyOrders.slice(0, 4).map((o, idx) => {
+                                                        const bg = ({'em_aberto': '#9CA3AF', 'em_andamento': '#C29A51', 'pronto': '#16A34A', 'entregue': '#AC5148', 'finalizado': '#16A34A'} as any)[o.status] || '#6B6B6B';
+                                                        return <div key={idx} className="w-2 h-2 rounded-full" style={{ backgroundColor: bg }} />
+                                                    })}
                                                     {dailyOrders.length > 4 && <div className="text-[8px] text-text-light font-ui leading-none flex items-center">+{dailyOrders.length - 4}</div>}
                                                 </div>
                                             </div>
@@ -561,7 +684,7 @@ export default function AgendaPage() {
             </Tabs>
 
             <Dialog open={finishModalOpen} onOpenChange={setFinishModalOpen}>
-                <DialogContent className="sm:max-w-lg">
+                <DialogContent className="sm:max-w-lg w-[95vw] max-h-[90vh] overflow-y-auto rounded-2xl">
                     <DialogHeader>
                         <DialogTitle>Fechamento e Baixa de Estoque</DialogTitle>
                     </DialogHeader>

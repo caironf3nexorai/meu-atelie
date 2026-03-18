@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, Download, MessageSquare, Edit, Trash2 } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Plus, Download, MessageSquare, Edit, Trash2, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,6 +21,7 @@ interface OrcamentoItem {
 }
 
 export default function OrcamentosPage() {
+    const navigate = useNavigate();
     const { showAlert, showConfirm } = useModal();
     const supabase = createClient();
 
@@ -43,6 +45,32 @@ export default function OrcamentosPage() {
     const [itens, setItens] = useState<OrcamentoItem[]>([{ descricao: '', quantidade: 1, valor_unitario: '' }]);
     const [vincularEncomenda, setVincularEncomenda] = useState(false);
     const [encomendaId, setEncomendaId] = useState<string>('');
+
+    // Novos Campos
+    const [clienteCpf, setClienteCpf] = useState('');
+    const [clienteCep, setClienteCep] = useState('');
+    const [clienteRua, setClienteRua] = useState('');
+    const [clienteNumero, setClienteNumero] = useState('');
+    const [clienteBairro, setClienteBairro] = useState('');
+    const [clienteCidade, setClienteCidade] = useState('');
+    const [clienteEstado, setClienteEstado] = useState('');
+    const [valorFrete, setValorFrete] = useState<string>('');
+
+    // Aba ativa
+    const [abaAtiva, setAbaAtiva] = useState<'orcamentos' | 'aprovacao_arte'>('orcamentos');
+
+    // Estados da aba Aprovação de Arte
+    const [artes, setArtes] = useState<any[]>([]);
+    const [orcamentosAprovados, setOrcamentosAprovados] = useState<any[]>([]);
+    const [showNovaArte, setShowNovaArte] = useState(false);
+    const [orcamentoSelecionado, setOrcamentoSelecionado] = useState<any>(null);
+    const [arquivo, setArquivo] = useState<File | null>(null);
+    const [uploadingArte, setUploadingArte] = useState(false);
+
+    // Autocomplete de Clientes
+    const [clientesDb, setClientesDb] = useState<any[]>([]);
+    const [filteredClientes, setFilteredClientes] = useState<any[]>([]);
+    const [showClienteDropdown, setShowClienteDropdown] = useState(false);
 
     useEffect(() => {
         let channel: any;
@@ -107,6 +135,31 @@ export default function OrcamentosPage() {
 
         if (encs) setEncomendas(encs);
 
+        // --- Dados da aba de Aprovação de Arte ---
+        const { data: artesData } = await supabase
+            .from('aprovacao_arte')
+            .select('*, orcamentos(numero, cliente_nome, cliente_contato)')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+
+        const { data: orcsData } = await supabase
+            .from('orcamentos')
+            .select('id, numero, cliente_nome, cliente_contato')
+            .eq('user_id', user.id)
+            .eq('status', 'aceito')
+            .order('created_at', { ascending: false });
+
+        if (artesData) setArtes(artesData);
+        if (orcsData) setOrcamentosAprovados(orcsData);
+
+        // Fetch Clientes for autocomplete
+        const { data: clientesData } = await supabase
+            .from('clients')
+            .select('id, name, whatsapp, cpf, endereco_cep, endereco_rua, endereco_numero, endereco_bairro, endereco_cidade, endereco_estado')
+            .eq('user_id', user.id)
+            .order('name');
+        if (clientesData) setClientesDb(clientesData);
+
         setLoading(false);
     };
 
@@ -140,7 +193,16 @@ export default function OrcamentosPage() {
         setItens([{ descricao: '', quantidade: 1, valor_unitario: '' }]);
         setVincularEncomenda(false);
         setEncomendaId('');
+        setShowClienteDropdown(false);
         setShowForm(false);
+        setClienteCpf('');
+        setClienteCep('');
+        setClienteRua('');
+        setClienteNumero('');
+        setClienteBairro('');
+        setClienteCidade('');
+        setClienteEstado('');
+        setValorFrete('');
     };
 
     const handleSalvar = async () => {
@@ -164,13 +226,21 @@ export default function OrcamentosPage() {
             numero: nextNum,
             cliente_nome: clienteNome,
             cliente_contato: clienteContato,
+            cliente_cpf: clienteCpf,
+            cliente_endereco_cep: clienteCep,
+            cliente_endereco_rua: clienteRua,
+            cliente_endereco_numero: clienteNumero,
+            cliente_endereco_bairro: clienteBairro,
+            cliente_endereco_cidade: clienteCidade,
+            cliente_endereco_estado: clienteEstado,
+            valor_frete: valorFrete ? Number(valorFrete.replace(',', '.')) : null,
             validade_dias: validadeDias,
             condicoes_pagamento: condicoes,
             prazo_entrega: prazoEntrega,
             observacoes: observacoes,
             status: 'pendente',
             encomenda_id: vincularEncomenda && encomendaId ? encomendaId : null,
-            total: totalGeral
+            total: totalGeral + (valorFrete ? Number(valorFrete.replace(',', '.')) : 0)
         }).select().single();
 
         if (orcError || !orcData) {
@@ -448,14 +518,274 @@ export default function OrcamentosPage() {
         }
     };
 
+    const handleEnviarArte = async () => {
+        if (!arquivo || !orcamentoSelecionado) return;
+        setUploadingArte(true);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            setUploadingArte(false);
+            return;
+        }
+
+        const ext = arquivo.name.split('.').pop();
+        const path = `aprovacao-arte/${user.id}/${Date.now()}.${ext}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from('atelie-assets')
+            .upload(path, arquivo, { upsert: true });
+
+        if (uploadError) {
+            showAlert('Erro', 'Erro ao enviar arquivo para o storage.');
+            console.error(uploadError);
+            setUploadingArte(false);
+            return;
+        }
+
+        const { data: urlData } = supabase.storage
+            .from('atelie-assets')
+            .getPublicUrl(path);
+
+        const { data: novaArte, error } = await supabase
+            .from('aprovacao_arte')
+            .insert({
+                orcamento_id: orcamentoSelecionado.id,
+                user_id: user.id,
+                arquivo_nome: arquivo.name,
+                arquivo_url: urlData.publicUrl,
+                arquivo_tipo: ext || 'arquivo',
+                expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+            })
+            .select('*, orcamentos(numero, cliente_nome, cliente_contato)')
+            .single();
+
+        if (!error && novaArte) {
+            setArtes(prev => [novaArte, ...prev]);
+            setShowNovaArte(false);
+            setArquivo(null);
+            setOrcamentoSelecionado(null);
+            showAlert('Sucesso', 'Arte enviada para aprovação!');
+        } else {
+            console.error(error);
+            showAlert('Erro', 'Erro ao salvar o registro da arte no banco.');
+        }
+        setUploadingArte(false);
+    };
+
+    const handleEnviarArteWhatsApp = (arte: any) => {
+        const link = `${import.meta.env.VITE_APP_URL}/aprovar-arte/${arte.token_publico}`;
+        const numero = arte.orcamentos?.cliente_contato?.replace(/\D/g, '');
+        const texto = encodeURIComponent(
+            `Ola ${arte.orcamentos?.cliente_nome}!\n\n` +
+            `O projeto do seu bordado esta pronto para aprovacao.\n\n` +
+            `Acesse o link para visualizar e aprovar:\n${link}\n\n` +
+            `Aguardo sua confirmacao!`
+        );
+        const url = numero
+            ? `https://wa.me/55${numero}?text=${texto}`
+            : `https://wa.me/?text=${texto}`;
+        window.open(url, '_blank');
+    };
+
     if (loading) {
         return <div className="p-12 text-center text-text-light font-ui animate-pulse">Carregando orçamentos...</div>;
     }
 
     return (
-        <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in pb-20">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 space-y-8 animate-in fade-in pb-20">
 
-            {!showForm ? (
+            {/* Abas */}
+            <div style={{ display: 'flex', background: '#F2E9DB', padding: '5px',
+                borderRadius: '14px', gap: '6px', marginBottom: '24px' }}>
+                {[
+                    { id: 'orcamentos', label: '📋 Orçamentos' },
+                    { id: 'aprovacao_arte', label: '🎨 Aprovação de Arte' },
+                ].map(aba => (
+                    <button key={aba.id} onClick={() => setAbaAtiva(aba.id as any)}
+                        style={{
+                            flex: 1, padding: '10px 16px', borderRadius: '10px', border: 'none',
+                            fontFamily: 'Nunito', fontWeight: 700, fontSize: '14px', cursor: 'pointer',
+                            background: abaAtiva === aba.id ? '#AC5148' : 'transparent',
+                            color: abaAtiva === aba.id ? 'white' : '#6B6B6B',
+                            transition: 'all 0.2s ease'
+                        }}>
+                        {aba.label}
+                    </button>
+                ))}
+            </div>
+
+            {abaAtiva === 'aprovacao_arte' ? (
+                /* Conteúdo da Aba Aprovação de Arte */
+                <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }} className="flex-col sm:flex-row gap-4">
+                        <p style={{ color: '#6B6B6B', fontSize: '14px', margin: 0, maxWidth: '600px' }}>
+                            Anexe o arquivo do risco/arte e envie para aprovação do cliente.
+                            O link expira em 7 dias após aprovação.
+                        </p>
+                        <button onClick={() => setShowNovaArte(true)}
+                            style={{ background: '#AC5148', color: 'white', padding: '10px 20px',
+                                borderRadius: '12px', border: 'none', fontWeight: 700,
+                                fontSize: '14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                            + Nova Arte
+                        </button>
+                    </div>
+
+                    {showNovaArte && createPortal(
+                        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            zIndex: 9999, padding: '24px' }} className="animate-in fade-in">
+                            <div style={{ background: 'white', borderRadius: '20px', padding: '32px',
+                                maxWidth: '480px', width: '100%' }} className="animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
+                                <h3 style={{ margin: '0 0 24px', fontFamily: 'Playfair Display',
+                                    fontSize: '22px', color: '#1C1410' }}>
+                                    Nova Aprovação de Arte
+                                </h3>
+
+                                <div style={{ marginBottom: '16px' }}>
+                                    <label style={{ fontWeight: 700, fontSize: '13px', display: 'block', marginBottom: '8px' }}>
+                                        Orçamento aprovado *
+                                    </label>
+                                    <select
+                                        value={orcamentoSelecionado?.id || ''}
+                                        onChange={e => {
+                                            const orc = orcamentosAprovados.find(o => o.id === e.target.value);
+                                            setOrcamentoSelecionado(orc || null);
+                                        }}
+                                        style={{ width: '100%', padding: '12px', borderRadius: '10px',
+                                            border: '1px solid #E5D9CC', fontFamily: 'Nunito', fontSize: '14px',
+                                            cursor: 'pointer', outline: 'none' }}
+                                    >
+                                        <option value="">Selecionar orçamento...</option>
+                                        {orcamentosAprovados.map(orc => (
+                                            <option key={orc.id} value={orc.id}>
+                                                #{String(orc.numero).padStart(3,'0')} — {orc.cliente_nome}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div style={{ marginBottom: '24px' }}>
+                                    <label style={{ fontWeight: 700, fontSize: '13px', display: 'block', marginBottom: '8px' }}>
+                                        Arquivo da arte *
+                                    </label>
+                                    <label style={{ display: 'block', cursor: 'pointer' }}>
+                                        <div style={{ border: '2px dashed #E5D9CC', borderRadius: '12px',
+                                            padding: '24px', textAlign: 'center',
+                                            background: arquivo ? '#F0FDF4' : '#FAFAFA' }}>
+                                            {arquivo ? (
+                                                <div>
+                                                    <p style={{ color: '#16A34A', fontWeight: 700, margin: '0 0 4px' }}>
+                                                        ✅ {arquivo.name}
+                                                    </p>
+                                                    <p style={{ color: '#6B6B6B', fontSize: '12px', margin: 0 }}>
+                                                        {(arquivo.size / 1024).toFixed(0)} KB
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <div>
+                                                    <p style={{ color: '#6B6B6B', margin: '0 0 4px' }}>
+                                                        📁 Clique para selecionar o arquivo
+                                                    </p>
+                                                    <p style={{ color: '#AAAAAA', fontSize: '12px', margin: 0 }}>
+                                                        PDF, PNG, JPG, DOCX — máx. 10MB
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <input type="file" accept=".pdf,.png,.jpg,.jpeg,.docx"
+                                            style={{ display: 'none' }}
+                                            onChange={e => setArquivo(e.target.files?.[0] || null)} />
+                                    </label>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '12px' }}>
+                                    <button onClick={() => { setShowNovaArte(false); setArquivo(null); setOrcamentoSelecionado(null); }}
+                                        style={{ flex: 1, padding: '12px', borderRadius: '12px',
+                                            border: '1px solid #E5D9CC', background: 'white',
+                                            cursor: 'pointer', fontWeight: 600, color: '#6B6B6B' }}>
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        onClick={handleEnviarArte}
+                                        disabled={!arquivo || !orcamentoSelecionado || uploadingArte}
+                                        style={{ flex: 2, padding: '12px', borderRadius: '12px',
+                                            background: arquivo && orcamentoSelecionado ? '#AC5148' : '#E5D9CC',
+                                            color: arquivo && orcamentoSelecionado ? 'white' : '#AAAAAA',
+                                            border: 'none', fontWeight: 700, fontSize: '14px',
+                                            cursor: arquivo && orcamentoSelecionado ? 'pointer' : 'not-allowed' }}>
+                                        {uploadingArte ? '⏳ Enviando...' : '🎨 Enviar para aprovação'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>,
+                        document.body
+                    )}
+
+                    {artes.length === 0 ? (
+                        <div className="bg-surface rounded-3xl p-12 text-center border border-border/50 shadow-sm mt-4">
+                            <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>🎨</span>
+                            <h3 className="font-display text-xl text-text mb-2">Nenhuma arte enviada</h3>
+                            <p className="font-ui text-text-light max-w-md mx-auto">Após o cliente aprovar o orçamento, envie a arte/risco por aqui para que ele possa aprovar antes do bordado final.</p>
+                        </div>
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            {artes.map(arte => (
+                                <div key={arte.id} style={{ background: 'white', borderRadius: '16px',
+                                    padding: '18px 20px', border: '1px solid #E5D9CC',
+                                    display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                                    className="flex-col sm:flex-row gap-4">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+                                        <div style={{ fontSize: '24px', background: '#F2E9DB', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            {arte.arquivo_tipo === 'pdf' ? '📄' : '🖼️'}
+                                        </div>
+                                        <div>
+                                            <p style={{ margin: 0, fontWeight: 700, color: '#1A1A1A', fontSize: '15px' }}>
+                                                {arte.arquivo_nome}
+                                            </p>
+                                            <p style={{ margin: '2px 0 0', fontSize: '13px', color: '#6B6B6B' }}>
+                                                Orç. #{String(arte.orcamentos?.numero).padStart(3,'0')} · {arte.orcamentos?.cliente_nome}
+                                                {' · '}
+                                                {arte.status === 'aprovado' ? (
+                                                    <span style={{ color: '#16A34A', fontWeight: 700 }}>✅ Aprovado</span>
+                                                ) : arte.status === 'recusado' ? (
+                                                    <span style={{ color: '#DC2626', fontWeight: 700 }}>❌ Recusado</span>
+                                                ) : (
+                                                    <span style={{ color: '#C29A51', fontWeight: 700 }}>⏳ Aguardando</span>
+                                                )}
+                                            </p>
+                                            {arte.status === 'pendente' && (
+                                                <p style={{ margin: '2px 0 0', fontSize: '11px', color: '#AAAAAA' }}>
+                                                    Expira em {new Date(arte.expires_at).toLocaleDateString('pt-BR')}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '8px', width: '100%', justifyContent: 'flex-start' }} className="sm:w-auto sm:justify-end">
+                                        <button
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(
+                                                    `${import.meta.env.VITE_APP_URL}/aprovar-arte/${arte.token_publico}`
+                                                );
+                                                showAlert('Sucesso', 'Link copiado para a área de transferência!');
+                                            }}
+                                            style={{ background: '#F2E9DB', border: 'none', borderRadius: '10px',
+                                                padding: '8px 12px', cursor: 'pointer', fontSize: '13px',
+                                                fontWeight: 600, color: '#AC5148', flex: 1 }}>
+                                            📋 Copiar link
+                                        </button>
+                                        <button
+                                            onClick={() => handleEnviarArteWhatsApp(arte)}
+                                            style={{ background: '#F0FDF4', border: '1px solid #16A34A',
+                                                borderRadius: '10px', padding: '8px 12px', cursor: 'pointer',
+                                                fontSize: '13px', fontWeight: 600, color: '#16A34A', flex: 1 }}>
+                                            💬 WhatsApp
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            ) : !showForm ? (
                 <>
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-surface p-6 sm:p-8 rounded-3xl border border-border flex-wrap shadow-sm">
                         <div>
@@ -517,6 +847,13 @@ export default function OrcamentosPage() {
                                         )}
                                     </div>
                                     <div className="flex gap-2 w-full md:w-auto">
+                                        {orc.status === 'aceito' && (
+                                            <Button variant="outline" onClick={() => navigate('/dashboard/agenda', {
+                                                state: { novoAgendamento: { orcamento_id: orc.id, description: orc.orcamento_itens?.[0]?.descricao, value: orc.total, notes: orc.observacoes, prazoDias: orc.prazo_entrega, cliente_nome: orc.cliente_nome } }
+                                            })} className="flex-1 md:flex-none h-10 rounded-xl bg-[#F0FDF4] text-[#16A34A] hover:bg-[#DCFCE7] border-none shadow-none font-semibold" title="Agendar Encomenda">
+                                                <Calendar className="w-4 h-4 mr-0 sm:mr-2" /> <span className="hidden sm:inline">Agendar</span>
+                                            </Button>
+                                        )}
                                         <Button variant="outline" onClick={() => handleEnviarWhatsApp(orc)} className="flex-1 md:flex-none h-10 rounded-xl bg-[#F0FDF4] text-[#16A34A] hover:bg-[#DCFCE7] border-none shadow-none font-semibold" title="Enviar WhatsApp">
                                             <MessageSquare className="w-4 h-4 mr-0 sm:mr-2" /> <span className="hidden sm:inline">WhatsApp</span>
                                         </Button>
@@ -554,9 +891,53 @@ export default function OrcamentosPage() {
 
                         {/* Cliente */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
+                            <div className="space-y-2 relative">
                                 <Label>Nome do Cliente *</Label>
-                                <Input value={clienteNome} onChange={e => setClienteNome(e.target.value)} placeholder="Ex: Maria Joaquina" className="h-12 rounded-xl" />
+                                <Input 
+                                    value={clienteNome} 
+                                    onChange={e => {
+                                        const val = e.target.value;
+                                        setClienteNome(val);
+                                        if (val.length > 0) {
+                                            const filtrados = clientesDb.filter(c => c.name.toLowerCase().includes(val.toLowerCase()));
+                                            setFilteredClientes(filtrados);
+                                            setShowClienteDropdown(filtrados.length > 0);
+                                        } else {
+                                            setShowClienteDropdown(false);
+                                        }
+                                    }} 
+                                    onFocus={() => {
+                                        if (clienteNome.length > 0 && filteredClientes.length > 0) setShowClienteDropdown(true);
+                                    }}
+                                    onBlur={() => setTimeout(() => setShowClienteDropdown(false), 200)}
+                                    placeholder="Ex: Maria Joaquina" 
+                                    className="h-12 rounded-xl" 
+                                />
+                                {showClienteDropdown && (
+                                    <div className="absolute z-10 w-full bg-white border border-border rounded-xl shadow-lg mt-1 max-h-48 overflow-auto">
+                                        {filteredClientes.map(c => (
+                                            <div 
+                                                key={c.id} 
+                                                className="px-4 py-3 hover:bg-[#FAF0EF] cursor-pointer border-b border-border/50 last:border-0"
+                                                onClick={() => {
+                                                    setClienteNome(c.name);
+                                                    setClienteContato(c.whatsapp || '');
+                                                    setClienteCpf(c.cpf || '');
+                                                    setClienteCep(c.endereco_cep || '');
+                                                    setClienteRua(c.endereco_rua || '');
+                                                    setClienteNumero(c.endereco_numero || '');
+                                                    setClienteBairro(c.endereco_bairro || '');
+                                                    setClienteCidade(c.endereco_cidade || '');
+                                                    setClienteEstado(c.endereco_estado || '');
+                                                    setShowClienteDropdown(false);
+                                                }}
+                                            >
+                                                <p className="font-semibold text-text text-sm">{c.name}</p>
+                                                {c.whatsapp && <p className="text-xs text-text-light">{c.whatsapp}</p>}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                             <div className="space-y-2">
                                 <Label>Contato (WhatsApp do cliente)</Label>
@@ -572,6 +953,38 @@ export default function OrcamentosPage() {
                                     <option value="15">15 dias</option>
                                     <option value="30">30 dias</option>
                                 </select>
+                            </div>
+                        </div>
+
+                        {/* Detalhes do Cliente */}
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                            <div className="space-y-2 md:col-span-2">
+                                <Label>CPF do Cliente (Opcional)</Label>
+                                <Input value={clienteCpf} onChange={e => setClienteCpf(e.target.value)} placeholder="000.000.000-00" className="h-12 rounded-xl" />
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
+                                <Label>CEP</Label>
+                                <Input value={clienteCep} onChange={e => setClienteCep(e.target.value)} placeholder="00000-000" className="h-12 rounded-xl" />
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
+                                <Label>Rua</Label>
+                                <Input value={clienteRua} onChange={e => setClienteRua(e.target.value)} placeholder="Ex: Rua das Flores, 123" className="h-12 rounded-xl" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Número</Label>
+                                <Input value={clienteNumero} onChange={e => setClienteNumero(e.target.value)} placeholder="Ex: 123" className="h-12 rounded-xl" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Bairro</Label>
+                                <Input value={clienteBairro} onChange={e => setClienteBairro(e.target.value)} placeholder="Ex: Centro" className="h-12 rounded-xl" />
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
+                                <Label>Cidade</Label>
+                                <Input value={clienteCidade} onChange={e => setClienteCidade(e.target.value)} placeholder="Ex: São Paulo" className="h-12 rounded-xl" />
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
+                                <Label>Estado</Label>
+                                <Input value={clienteEstado} onChange={e => setClienteEstado(e.target.value)} placeholder="Ex: SP" className="h-12 rounded-xl" />
                             </div>
                         </div>
 
@@ -609,7 +1022,7 @@ export default function OrcamentosPage() {
 
                             <div className="text-right mt-6 p-6 bg-[#FAF0EF] rounded-2xl border border-primary/10">
                                 <span className="font-display text-2xl text-primary font-bold">
-                                    Total Geral: R$ {totalGeral.toFixed(2).replace('.', ',')}
+                                    Total Geral: R$ {(totalGeral + (valorFrete ? Number(valorFrete.replace(',', '.')) : 0)).toFixed(2).replace('.', ',')}
                                 </span>
                             </div>
                         </div>
@@ -630,6 +1043,10 @@ export default function OrcamentosPage() {
                             <div className="space-y-2">
                                 <Label>Prazo de Produção/Entrega</Label>
                                 <Input value={prazoEntrega} onChange={e => setPrazoEntrega(e.target.value)} placeholder="Ex: 15 dias úteis" className="h-12 rounded-xl" />
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
+                                <Label>Valor do Frete (Opcional - R$)</Label>
+                                <Input value={valorFrete} onChange={e => setValorFrete(e.target.value)} placeholder="Ex: 25,00" className="h-12 rounded-xl text-primary font-semibold" />
                             </div>
                             <div className="md:col-span-2 space-y-2">
                                 <Label>Observações Adicionais (opcional)</Label>

@@ -9,6 +9,14 @@ export interface Client {
     birthday: string | null;
     notes: string | null;
     created_at: string;
+    cpf?: string;
+    email?: string;
+    endereco_rua?: string;
+    endereco_numero?: string;
+    endereco_bairro?: string;
+    endereco_cidade?: string;
+    endereco_estado?: string;
+    endereco_cep?: string;
 }
 
 export interface InventoryItem {
@@ -52,6 +60,9 @@ export interface Order {
     photo_url: string | null;
     created_at: string;
     updated_at: string;
+    codigo_rastreio?: string;
+    rastreio_enviado_em?: string;
+    orcamento_id?: string;
     clients?: Client; // Join
 }
 
@@ -105,6 +116,12 @@ export const gestaoApi = {
         if (!user) throw new Error('Não autenticado');
 
         const { data, error } = await supabase.from('clients').insert({ ...client, user_id: user.id }).select().single();
+        if (error) throw error;
+        return data as Client;
+    },
+    async updateClient(id: string, clientData: Partial<Client>) {
+        const supabase = createClient();
+        const { data, error } = await supabase.from('clients').update(clientData).eq('id', id).select().single();
         if (error) throw error;
         return data as Client;
     },

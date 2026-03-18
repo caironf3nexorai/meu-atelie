@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Image as ImageIcon, Paintbrush, DollarSign, PieChart, Sparkles, User, LogOut, Lock, ShoppingBag, Shield, Gift, Calendar, Users, Package, Timer, FileText } from 'lucide-react';
+import { Home, Image as ImageIcon, Paintbrush, DollarSign, PieChart, Sparkles, User, LogOut, Lock, ShoppingBag, Shield, Gift, Calendar, Users, Package, Timer, FileText, Truck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UpgradeModal } from '../shared/UpgradeModal';
 import { createClient } from '@/lib/supabase/client';
@@ -26,6 +26,7 @@ const premiumItems = [
     { href: '/dashboard/agenda', label: 'Agenda', icon: Calendar, isPremium: true },
     { href: '/dashboard/clientes', label: 'Clientes', icon: Users, isPremium: true },
     { href: '/dashboard/orcamentos', label: 'Orçamentos', icon: FileText, isPremium: true },
+    { href: '/dashboard/envios', label: 'Envios', icon: Truck, isPremium: true },
     { href: '/dashboard/estoque', label: 'Estoque', icon: Package, isPremium: true },
     { href: '/dashboard/cronometro', label: 'Cronômetro', icon: Timer, isPremium: true },
 ];

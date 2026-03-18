@@ -184,6 +184,25 @@ TEXTURE WITH SEGMENTS:
                 ? `\nFACELESS MODE ACTIVATED (MANDATORY RULE):\n- ABSOLUTELY NO FACIAL FEATURES ALLOWED.\n- Do NOT draw eyes, pupils, eyelashes, eyebrows, nose, nostrils, mouth, or lips.\n- Draw ONLY the blank outer contour of the face, jawline, ears, and hair framing the face.\n- The face area MUST remain completely empty white space.`
                 : `\nFACIAL FEATURES RULE:\n- Draw facial features (eyes, nose, mouth) according to the selected style.\n- Keep facial lines clean and essential.`;
 
+            const instrucaoFormato = {
+                redondo: `
+    - Desenhe um círculo perfeito e fino (linha de 2-3px) ao redor de toda a composição como guia de bastidor
+    - O bordado deve ficar centralizado dentro do círculo com margem uniforme de 10%
+    - O círculo deve ser a última linha do desenho, bem definida
+  `,
+                quadrado: `
+    - Desenhe um quadrado com cantos levemente arredondados ao redor de toda a composição como guia de bastidor
+    - O bordado deve ficar centralizado dentro do quadrado com margem uniforme de 10%
+    - O quadrado deve ser a última linha do desenho, bem definida
+  `,
+                retangular: `
+    - Desenhe um retângulo com cantos levemente arredondados ao redor de toda a composição como guia de bastidor
+    - O bordado deve ficar centralizado dentro do retângulo com margem uniforme de 10%
+    - O retângulo deve ser a última linha do desenho, bem definida
+  `,
+                sem_bastidor: ``
+            }[formData.formato as string] || '';
+
             promptUsed = `You are an expert in creating embroidery transfer patterns (riscos de bordado).
 ${formData.modo === 'texto' ? 'Generate a black and white drawing based on the following description: "' + formData.descricao + '"' : 'Generate a black and white drawing from the reference image provided.'}
 
@@ -217,6 +236,9 @@ ${formData.modo === 'texto' ? '- Create a harmonious alignment' : '- Keep the na
 5. TEXT AND FACES
 ${formData.modo === 'texto' ? '- Remove any text from the drawing, no text, no letters, no words, no numbers allowed' : (formData.includeText ? '- Preserve any text visible in the reference image as outlined letterforms' : '- Remove any text from the image, no text, no letters')}
 ${facelessPrompt}
+
+6. HOOP / FRAME SHAPE
+${instrucaoFormato}
 
 ${formData.modo === 'texto' ? 'Generate a design following ALL the rules above based on the description.' : 'REFERENCE IMAGE: Convert this image following ALL the rules above. Generate now.'}`;
 

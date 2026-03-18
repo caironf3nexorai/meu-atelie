@@ -504,7 +504,7 @@ export default function BordadoColoridoPage() {
                                             const url = URL.createObjectURL(blob);
                                             const a = document.createElement('a');
                                             a.href = url;
-                                            a.download = `bordado-colorido-suelen.png`;
+                                            a.download = `bordado-colorido.png`;
                                             a.click();
                                             URL.revokeObjectURL(url);
                                         }} className="w-full h-14 rounded-2xl bg-primary hover:bg-primary-dark shadow-md text-base justify-between px-6 mb-3">

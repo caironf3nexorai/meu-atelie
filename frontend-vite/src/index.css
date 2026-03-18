@@ -174,7 +174,6 @@ html, body {
     width: calc(100vw - 32px) !important;
     padding: 20px !important;
     border-radius: 20px !important;
-    margin: 16px !important;
   }
 
   /* DialogFooter stacking on mobile */

@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Search, Plus, User, MessageCircle } from 'lucide-react';
+import { Loader2, Search, Plus, User, MessageCircle, Edit } from 'lucide-react';
 import { useModal } from '@/contexts/ModalContext';
 
 export default function ClientesPage() {
@@ -19,8 +19,13 @@ export default function ClientesPage() {
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
     // Form states
-    const [formData, setFormData] = useState({ name: '', whatsapp: '', city: '', birthday: '', notes: '' });
+    const initialFormData = { name: '', whatsapp: '', city: '', birthday: '', notes: '', cpf: '', email: '', endereco_cep: '', endereco_rua: '', endereco_numero: '', endereco_bairro: '', endereco_cidade: '', endereco_estado: '' };
+    const [formData, setFormData] = useState(initialFormData);
     const [saving, setSaving] = useState(false);
+
+    // Edit states
+    const [clienteEditando, setClienteEditando] = useState<any>(null);
+    const [showModalEdicao, setShowModalEdicao] = useState(false);
 
     useEffect(() => {
         loadClients();
@@ -45,7 +50,8 @@ export default function ClientesPage() {
             const newClient = await gestaoApi.createClient(formData);
             setClients([...clients, newClient]);
             setIsCreateOpen(false);
-            setFormData({ name: '', whatsapp: '', city: '', birthday: '', notes: '' });
+            setFormData(initialFormData);
+            showAlert('Sucesso', 'Cliente cadastrada com sucesso!');
         } catch (e) {
             console.error(e);
             showAlert('Erro', 'Erro ao criar cliente');
@@ -54,11 +60,44 @@ export default function ClientesPage() {
         }
     }
 
+    const handleSalvarEdicaoCliente = async () => {
+        try {
+            const payload = {
+                name: clienteEditando.name,
+                whatsapp: clienteEditando.whatsapp,
+                email: clienteEditando.email,
+                cpf: clienteEditando.cpf,
+                endereco_rua: clienteEditando.endereco_rua,
+                endereco_numero: clienteEditando.endereco_numero,
+                endereco_bairro: clienteEditando.endereco_bairro,
+                endereco_cidade: clienteEditando.endereco_cidade,
+                endereco_estado: clienteEditando.endereco_estado,
+                endereco_cep: clienteEditando.endereco_cep,
+                city: clienteEditando.endereco_cidade || clienteEditando.city,
+                birthday: clienteEditando.birthday,
+                notes: clienteEditando.notes
+            };
+            const updated = await gestaoApi.updateClient(clienteEditando.id, payload);
+            setClients(prev => prev.map(c => c.id === clienteEditando.id ? { ...c, ...updated } : c));
+            setShowModalEdicao(false);
+            setClienteEditando(null);
+            showAlert('Sucesso', 'Cliente atualizado!');
+            
+            // se tiver com o sheet aberto, atualiza também
+            if (selectedClient?.id === clienteEditando.id) {
+                setSelectedClient({ ...selectedClient, ...updated });
+            }
+        } catch (error) {
+            console.error(error);
+            showAlert('Erro', 'Erro ao salvar o cliente. Tente novamente.');
+        }
+    };
+
     const filtered = clients.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
 
     return (
         <>
-            <div className="max-w-6xl mx-auto space-y-6 pb-12">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-6 pb-12">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <h1 className="font-display text-3xl text-text">Banco de Clientes</h1>
@@ -72,7 +111,7 @@ export default function ClientesPage() {
                                 Novo Cliente
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="sm:max-w-[425px]">
+                        <DialogContent className="sm:max-w-[425px] w-[95vw] max-h-[90vh] overflow-y-auto rounded-2xl">
                             <DialogHeader>
                                 <DialogTitle>Cadastrar Nova Cliente</DialogTitle>
                             </DialogHeader>
@@ -86,14 +125,47 @@ export default function ClientesPage() {
                                     <Input id="whatsapp" value={formData.whatsapp} onChange={e => setFormData({ ...formData, whatsapp: e.target.value })} placeholder="(11) 99999-9999" />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="city">Cidade</Label>
-                                    <Input id="city" value={formData.city} onChange={e => setFormData({ ...formData, city: e.target.value })} placeholder="Ex: São Paulo - SP" />
+                                    <Label htmlFor="email">Email</Label>
+                                    <Input id="email" type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="email@exemplo.com" />
                                 </div>
                                 <div className="space-y-2">
+                                    <Label htmlFor="cpf">CPF</Label>
+                                    <Input id="cpf" value={formData.cpf} onChange={e => setFormData({ ...formData, cpf: e.target.value })} placeholder="000.000.000-00" />
+                                </div>
+
+                                <div className="space-y-2 col-span-full pt-4 border-t border-border mt-4">
+                                    <h4 className="font-semibold text-primary uppercase tracking-wide text-xs">Endereço</h4>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="endereco_cep">CEP</Label>
+                                    <Input id="endereco_cep" value={formData.endereco_cep} onChange={e => setFormData({ ...formData, endereco_cep: e.target.value })} placeholder="00000-000" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="endereco_rua">Rua / Logradouro</Label>
+                                    <Input id="endereco_rua" value={formData.endereco_rua} onChange={e => setFormData({ ...formData, endereco_rua: e.target.value })} placeholder="Rua, Avenida, etc." />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="endereco_numero">Número</Label>
+                                    <Input id="endereco_numero" value={formData.endereco_numero} onChange={e => setFormData({ ...formData, endereco_numero: e.target.value })} placeholder="123" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="endereco_bairro">Bairro</Label>
+                                    <Input id="endereco_bairro" value={formData.endereco_bairro} onChange={e => setFormData({ ...formData, endereco_bairro: e.target.value })} placeholder="Bairro" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="endereco_cidade">Cidade</Label>
+                                    <Input id="endereco_cidade" value={formData.endereco_cidade} onChange={e => setFormData({ ...formData, endereco_cidade: e.target.value })} placeholder="Ex: São Paulo" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="endereco_estado">Estado</Label>
+                                    <Input id="endereco_estado" value={formData.endereco_estado} onChange={e => setFormData({ ...formData, endereco_estado: e.target.value })} placeholder="SP" />
+                                </div>
+
+                                <div className="space-y-2 col-span-full pt-4 border-t border-border mt-4">
                                     <Label htmlFor="birthday">Data de Aniversário</Label>
                                     <Input id="birthday" type="date" value={formData.birthday} onChange={e => setFormData({ ...formData, birthday: e.target.value })} />
                                 </div>
-                                <div className="space-y-2">
+                                <div className="space-y-2 col-span-full">
                                     <Label htmlFor="notes">Observações</Label>
                                     <Textarea id="notes" value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value })} placeholder="Estilo favorito, restrições..." />
                                 </div>
@@ -132,8 +204,16 @@ export default function ClientesPage() {
                                 const totalSpent = client.orders?.reduce((sum: number, o: any) => sum + (Number(o.value) || 0), 0) || 0;
 
                                 return (
-                                    <div key={client.id} onClick={() => setSelectedClient(client)} className="border border-border-light p-4 rounded-xl flex flex-col hover:border-primary/50 cursor-pointer transition-colors bg-surface">
-                                        <h3 className="font-medium text-lg text-text truncate">{client.name}</h3>
+                                    <div key={client.id} onClick={() => setSelectedClient(client)} className="border border-border-light p-4 rounded-xl flex flex-col hover:border-primary/50 cursor-pointer transition-colors bg-surface relative group">
+                                        <div className="flex justify-between items-start">
+                                            <h3 className="font-medium text-lg text-text truncate max-w-[80%]">{client.name}</h3>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); setClienteEditando(client); setShowModalEdicao(true); }}
+                                                className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-primary hover:bg-primary/10"
+                                                title="Editar Cliente">
+                                                <Edit className="w-4 h-4" />
+                                            </button>
+                                        </div>
                                         {client.whatsapp && (
                                             <a
                                                 href={`https://wa.me/55${client.whatsapp.replace(/\D/g, '')}`}
@@ -220,6 +300,74 @@ export default function ClientesPage() {
                     )}
                 </SheetContent>
             </Sheet>
+
+            {/* Modal de Edição */}
+            <Dialog open={showModalEdicao} onOpenChange={setShowModalEdicao}>
+                <DialogContent className="sm:max-w-[540px] w-[95vw] max-h-[90vh] overflow-y-auto rounded-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Editar Cliente</DialogTitle>
+                    </DialogHeader>
+                    {clienteEditando && (
+                        <form onSubmit={(e) => { e.preventDefault(); handleSalvarEdicaoCliente(); }} className="space-y-4 pt-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2 col-span-full">
+                                    <Label htmlFor="edit_name">Nome Completo *</Label>
+                                    <Input id="edit_name" required value={clienteEditando.name || ''} onChange={e => setClienteEditando({ ...clienteEditando, name: e.target.value })} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit_whatsapp">WhatsApp / Telefone</Label>
+                                    <Input id="edit_whatsapp" value={clienteEditando.whatsapp || ''} onChange={e => setClienteEditando({ ...clienteEditando, whatsapp: e.target.value })} placeholder="(00) 00000-0000" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit_email">Email</Label>
+                                    <Input id="edit_email" type="email" value={clienteEditando.email || ''} onChange={e => setClienteEditando({ ...clienteEditando, email: e.target.value })} placeholder="email@exemplo.com" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit_cpf">CPF</Label>
+                                    <Input id="edit_cpf" value={clienteEditando.cpf || ''} onChange={e => setClienteEditando({ ...clienteEditando, cpf: e.target.value })} placeholder="000.000.000-00" />
+                                </div>
+
+                                <div className="space-y-2 col-span-full pt-4 border-t border-border mt-2">
+                                    <h4 className="font-semibold text-primary uppercase tracking-wide text-xs">Endereço</h4>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit_cep">CEP</Label>
+                                    <Input id="edit_cep" value={clienteEditando.endereco_cep || ''} onChange={e => setClienteEditando({ ...clienteEditando, endereco_cep: e.target.value })} placeholder="00000-000" />
+                                </div>
+                                <div className="space-y-2 col-span-full">
+                                    <Label htmlFor="edit_rua">Rua / Logradouro</Label>
+                                    <Input id="edit_rua" value={clienteEditando.endereco_rua || ''} onChange={e => setClienteEditando({ ...clienteEditando, endereco_rua: e.target.value })} placeholder="Rua, Avenida, etc." />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit_numero">Número</Label>
+                                    <Input id="edit_numero" value={clienteEditando.endereco_numero || ''} onChange={e => setClienteEditando({ ...clienteEditando, endereco_numero: e.target.value })} placeholder="123" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit_bairro">Bairro</Label>
+                                    <Input id="edit_bairro" value={clienteEditando.endereco_bairro || ''} onChange={e => setClienteEditando({ ...clienteEditando, endereco_bairro: e.target.value })} placeholder="Bairro" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit_cidade">Cidade</Label>
+                                    <Input id="edit_cidade" value={clienteEditando.endereco_cidade || ''} onChange={e => setClienteEditando({ ...clienteEditando, endereco_cidade: e.target.value })} placeholder="Cidade" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit_estado">Estado</Label>
+                                    <Input id="edit_estado" value={clienteEditando.endereco_estado || ''} onChange={e => setClienteEditando({ ...clienteEditando, endereco_estado: e.target.value })} placeholder="MG" />
+                                </div>
+                            </div>
+                            
+                            <div className="flex gap-3 justify-end pt-4 mt-2">
+                                <Button type="button" variant="outline" onClick={() => { setShowModalEdicao(false); setClienteEditando(null); }} className="w-full sm:w-auto">
+                                    Cancelar
+                                </Button>
+                                <Button type="submit" className="w-full sm:w-auto bg-primary hover:bg-primary-dark shadow-sm">
+                                    💾 Salvar alterações
+                                </Button>
+                            </div>
+                        </form>
+                    )}
+                </DialogContent>
+            </Dialog>
         </>
     );
 }

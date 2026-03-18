@@ -25,6 +25,7 @@ export default function RiscoPage() {
     const [showUpgrade, setShowUpgrade] = useState(false);
     const [imageExpiresAt, setImageExpiresAt] = useState<string | null>(null);
     const [timeLeft, setTimeLeft] = useState<string>('');
+    const [formato, setFormato] = useState<'redondo' | 'quadrado' | 'retangular' | 'sem_bastidor'>('sem_bastidor');
 
     // Dicas colapsáveis
     const [dicasRiscoAbertas, setDicasRiscoAbertas] = useState(() => {
@@ -152,7 +153,8 @@ export default function RiscoPage() {
                 style: style,
                 includeText: keepText,
                 isFaceless: isFaceless,
-                modo: modo
+                modo: modo,
+                formato: formato
             };
 
             if (modo === 'imagem') {
@@ -222,7 +224,7 @@ export default function RiscoPage() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `risco-bordado-${generationId || 'suelen'}.png`;
+        a.download = `risco-meuatelie.png`;
         a.click();
         URL.revokeObjectURL(url);
     };
@@ -412,6 +414,40 @@ export default function RiscoPage() {
                                     <input type="checkbox" className="sr-only peer" checked={isFaceless} onChange={(e) => setIsFaceless(e.target.checked)} />
                                     <div className="w-11 h-6 bg-border-light peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary shadow-inner"></div>
                                 </label>
+                            </div>
+
+                            {/* Seletor de formato */}
+                            <div style={{ marginBottom: '20px' }}>
+                                <label style={{ fontWeight: 700, fontSize: '13px', color: '#1A1A1A', display: 'block', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                    Formato do bastidor
+                                </label>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+                                    {[
+                                        { id: 'redondo', label: 'Redondo', icon: '⭕', desc: 'Círculo guia ao redor' },
+                                        { id: 'quadrado', label: 'Quadrado', icon: '⬜', desc: 'Quadrado guia ao redor' },
+                                        { id: 'retangular', label: 'Retangular', icon: '▬', desc: 'Retângulo guia ao redor' },
+                                        { id: 'sem_bastidor', label: 'Sem moldura', icon: '🖼️', desc: 'Risco limpo' },
+                                    ].map((f) => (
+                                        <button
+                                            key={f.id}
+                                            onClick={() => setFormato(f.id as any)}
+                                            style={{
+                                                padding: '12px 8px', borderRadius: '12px',
+                                                border: `2px solid ${formato === f.id ? '#AC5148' : '#E5D9CC'}`,
+                                                background: formato === f.id ? '#FDF0EE' : 'white',
+                                                cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s ease'
+                                            }}
+                                        >
+                                            <div style={{ fontSize: '22px', marginBottom: '6px' }}>{f.icon}</div>
+                                            <div style={{ fontSize: '11px', fontWeight: 700, color: formato === f.id ? '#AC5148' : '#6B6B6B' }}>
+                                                {f.label}
+                                            </div>
+                                            <div style={{ fontSize: '10px', color: '#AAAAAA', marginTop: '2px' }}>
+                                                {f.desc}
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
 
                             {/* Card de Dicas para Risco */}

@@ -18,6 +18,7 @@ const EstoquePage = React.lazy(() => import('@/pages/dashboard/EstoquePage'));
 const CronometroPage = React.lazy(() => import('@/pages/dashboard/CronometroPage'));
 const AssinarPage = React.lazy(() => import('@/pages/dashboard/AssinarPage'));
 const OrcamentosPage = React.lazy(() => import('@/pages/dashboard/OrcamentosPage'));
+const EnviosPage = React.lazy(() => import('@/pages/dashboard/EnviosPage'));
 
 /* --- LAYOUTS (To Be Migrated) --- */
 const DashboardLayout = React.lazy(() => import('@/components/layout/DashboardLayout'));
@@ -62,6 +63,7 @@ const OrcamentoPublicoPage = React.lazy(() => import('@/pages/public/OrcamentoPu
 const TermosDeUsoPage = React.lazy(() => import('@/pages/public/TermosDeUsoPage'));
 const PrivacidadePage = React.lazy(() => import('@/pages/public/PrivacidadePage'));
 const ResetarSenhaPage = React.lazy(() => import('@/pages/public/ResetarSenhaPage'));
+const AprovarArtePage = React.lazy(() => import('@/pages/public/AprovarArtePage'));
 
 const router = createBrowserRouter([
     {
@@ -71,6 +73,10 @@ const router = createBrowserRouter([
     {
         path: '/orcamento/:token',
         element: <OrcamentoPublicoPage />
+    },
+    {
+        path: '/aprovar-arte/:token',
+        element: <AprovarArtePage />
     },
     {
         path: '/termos',
@@ -115,6 +121,7 @@ const router = createBrowserRouter([
                     { path: 'dashboard/cronometro', element: <CronometroPage /> },
                     { path: 'dashboard/assinar', element: <AssinarPage /> },
                     { path: 'dashboard/orcamentos', element: <OrcamentosPage /> },
+                    { path: 'dashboard/envios', element: <EnviosPage /> },
                     { path: 'precificacao', element: <PrecificacaoPage /> },
                     { path: 'financeiro', element: <FinanceiroPage /> },
                     { path: 'estrategia', element: <EstrategiaPage /> },
