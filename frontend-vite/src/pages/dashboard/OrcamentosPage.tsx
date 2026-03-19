@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Download, MessageSquare, Edit, Trash2, Calendar } from 'lucide-react';
+import { Plus, Download, MessageSquare, Edit, Trash2, Calendar, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -58,6 +58,8 @@ export default function OrcamentosPage() {
 
     // Aba ativa
     const [abaAtiva, setAbaAtiva] = useState<'orcamentos' | 'aprovacao_arte'>('orcamentos');
+    const [editingOrcamentoId, setEditingOrcamentoId] = useState<string | null>(null);
+    const [visualizandoOrc, setVisualizandoOrc] = useState<any>(null);
 
     // Estados da aba Aprovação de Arte
     const [artes, setArtes] = useState<any[]>([]);
@@ -203,6 +205,38 @@ export default function OrcamentosPage() {
         setClienteCidade('');
         setClienteEstado('');
         setValorFrete('');
+        setEditingOrcamentoId(null);
+    };
+
+    const handleEditarOrcamento = (orc: any) => {
+        setEditingOrcamentoId(orc.id);
+        setClienteNome(orc.cliente_nome || '');
+        setClienteContato(orc.cliente_contato || '');
+        setClienteCpf(orc.cliente_cpf || '');
+        setClienteCep(orc.cliente_endereco_cep || '');
+        setClienteRua(orc.cliente_endereco_rua || '');
+        setClienteNumero(orc.cliente_endereco_numero || '');
+        setClienteBairro(orc.cliente_endereco_bairro || '');
+        setClienteCidade(orc.cliente_endereco_cidade || '');
+        setClienteEstado(orc.cliente_endereco_estado || '');
+        setValorFrete(orc.valor_frete ? String(orc.valor_frete).replace('.', ',') : '');
+        setValidadeDias(orc.validade_dias || 7);
+        setCondicoes(orc.condicoes_pagamento || '');
+        setPrazoEntrega(orc.prazo_entrega || '');
+        setObservacoes(orc.observacoes || '');
+        setVincularEncomenda(!!orc.encomenda_id);
+        setEncomendaId(orc.encomenda_id || '');
+        
+        if (orc.orcamento_itens && orc.orcamento_itens.length > 0) {
+            setItens(orc.orcamento_itens.map((i: any) => ({
+                descricao: i.descricao,
+                quantidade: i.quantidade,
+                valor_unitario: String(i.valor_unitario).replace('.', ',')
+            })));
+        } else {
+            setItens([{ descricao: '', quantidade: 1, valor_unitario: '' }]);
+        }
+        setShowForm(true);
     };
 
     const handleSalvar = async () => {
@@ -215,15 +249,8 @@ export default function OrcamentosPage() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        // Determine the next number (done by trigger/function normally, or we do it here)
-        // The user provided a get_next_orcamento_numero RPC
-        const { data: nextNumObj } = await supabase.rpc('get_next_orcamento_numero', { p_user_id: user.id });
-        const nextNum = nextNumObj || 1;
-
         // Create Orcamento
-        const { data: orcData, error: orcError } = await supabase.from('orcamentos').insert({
-            user_id: user.id,
-            numero: nextNum,
+        const payload = {
             cliente_nome: clienteNome,
             cliente_contato: clienteContato,
             cliente_cpf: clienteCpf,
@@ -238,14 +265,41 @@ export default function OrcamentosPage() {
             condicoes_pagamento: condicoes,
             prazo_entrega: prazoEntrega,
             observacoes: observacoes,
-            status: 'pendente',
             encomenda_id: vincularEncomenda && encomendaId ? encomendaId : null,
             total: totalGeral + (valorFrete ? Number(valorFrete.replace(',', '.')) : 0)
-        }).select().single();
+        };
+
+        let orcData: any = null;
+        let orcError: any = null;
+
+        if (editingOrcamentoId) {
+            // Edit existing
+            const res = await supabase.from('orcamentos').update(payload).eq('id', editingOrcamentoId).select().single();
+            orcData = res.data;
+            orcError = res.error;
+
+            if (!orcError && orcData) {
+                // Remove old items
+                await supabase.from('orcamento_itens').delete().eq('orcamento_id', editingOrcamentoId);
+            }
+        } else {
+            // Insert brand new
+            const { data: nextNumObj } = await supabase.rpc('get_next_orcamento_numero', { p_user_id: user.id });
+            const nextNum = nextNumObj || 1;
+
+            const res = await supabase.from('orcamentos').insert({
+                ...payload,
+                user_id: user.id,
+                numero: nextNum,
+                status: 'pendente'
+            }).select().single();
+            orcData = res.data;
+            orcError = res.error;
+        }
 
         if (orcError || !orcData) {
             console.error(orcError);
-            showAlert('Erro', 'Ocorreu um erro ao salvar o orçamento.');
+            showAlert('Erro', `Ocorreu um erro ao ${editingOrcamentoId ? 'atualizar' : 'salvar'} o orçamento: ${orcError?.message || 'Erro desconhecido'}`);
             setSaving(false);
             return;
         }
@@ -811,8 +865,20 @@ export default function OrcamentosPage() {
                                 <div key={orc.id} className="bg-surface rounded-2xl p-6 border border-border-light shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                                     <div>
                                         <div className="flex items-center gap-3">
-                                            <span className="font-bold text-primary font-mono bg-primary/5 px-2 py-0.5 rounded">#{String(orc.numero).padStart(3, '0')}</span>
-                                            <span className="font-semibold text-text text-lg">{orc.cliente_nome}</span>
+                                            <span 
+                                                className="font-bold text-primary font-mono bg-primary/5 px-2 py-0.5 rounded cursor-pointer hover:underline"
+                                                onClick={() => setVisualizandoOrc(orc)}
+                                                title="Visualizar Orçamento"
+                                            >
+                                                #{String(orc.numero).padStart(3, '0')}
+                                            </span>
+                                            <span 
+                                                className="font-semibold text-text text-lg cursor-pointer hover:text-primary"
+                                                onClick={() => setVisualizandoOrc(orc)}
+                                                title="Visualizar Orçamento"
+                                            >
+                                                {orc.cliente_nome}
+                                            </span>
                                             {orc.arquivos_count > 0 && (
                                                 <span style={{ background: '#F0FDF4', color: '#16A34A', padding: '2px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 600 }}>
                                                     📎 {orc.arquivos_count} arquivo(s)
@@ -847,6 +913,14 @@ export default function OrcamentosPage() {
                                         )}
                                     </div>
                                     <div className="flex gap-2 w-full md:w-auto">
+                                        <Button variant="outline" onClick={() => setVisualizandoOrc(orc)} className="flex-1 md:flex-none h-10 rounded-xl bg-surface text-text-light hover:bg-[#F2E9DB] border border-[#E5D9CC] shadow-none font-semibold px-3" title="Visualizar Detalhes">
+                                            <Eye className="w-4 h-4" />
+                                        </Button>
+                                        {orc.status !== 'aceito' && (
+                                            <Button variant="outline" onClick={() => handleEditarOrcamento(orc)} className="flex-1 md:flex-none h-10 rounded-xl bg-surface text-text-light hover:bg-[#F2E9DB] border border-[#E5D9CC] shadow-none font-semibold px-3" title="Editar Orçamento">
+                                                <Edit className="w-4 h-4" />
+                                            </Button>
+                                        )}
                                         {orc.status === 'aceito' && (
                                             <Button variant="outline" onClick={() => navigate('/dashboard/agenda', {
                                                 state: { novoAgendamento: { orcamento_id: orc.id, description: orc.orcamento_itens?.[0]?.descricao, value: orc.total, notes: orc.observacoes, prazoDias: orc.prazo_entrega, cliente_nome: orc.cliente_nome } }

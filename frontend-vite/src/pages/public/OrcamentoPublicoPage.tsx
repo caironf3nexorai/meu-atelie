@@ -252,7 +252,20 @@ export default function OrcamentoPublicoPage() {
                     {/* Dados do cliente */}
                     <div style={{ padding: '16px 24px', borderBottom: '1px solid #F2E9DB', background: '#FAFAFA' }}>
                         <p style={{ color: '#6B6B6B', fontSize: '12px', margin: '0 0 2px', textTransform: 'uppercase' }}>Para</p>
-                        <p style={{ color: '#1A1A1A', fontWeight: 700, fontSize: '16px', margin: 0 }}>{orcamento.cliente_nome}</p>
+                        <p style={{ color: '#1A1A1A', fontWeight: 700, fontSize: '16px', margin: 0, paddingBottom: '4px' }}>{orcamento.cliente_nome}</p>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px', marginTop: '8px' }}>
+                            {orcamento.cliente_contato && <p style={{ margin: 0, fontSize: '13px', color: '#4A4A4A' }}>📱 {orcamento.cliente_contato}</p>}
+                            {orcamento.cliente_cpf && <p style={{ margin: 0, fontSize: '13px', color: '#4A4A4A' }}>🆔 CPF: {orcamento.cliente_cpf}</p>}
+                            {orcamento.cliente_email && <p style={{ margin: 0, fontSize: '13px', color: '#4A4A4A' }}>✉️ {orcamento.cliente_email}</p>}
+                            {(orcamento.cliente_endereco_rua || orcamento.cliente_endereco_cidade) && (
+                                <p style={{ margin: 0, fontSize: '13px', color: '#4A4A4A', gridColumn: '1 / -1' }}>
+                                    📍 {orcamento.cliente_endereco_rua}{orcamento.cliente_endereco_numero ? `, ${orcamento.cliente_endereco_numero}` : ''}
+                                    {orcamento.cliente_endereco_bairro ? ` - ${orcamento.cliente_endereco_bairro}` : ''}
+                                    {orcamento.cliente_endereco_cidade ? ` - ${orcamento.cliente_endereco_cidade}/${orcamento.cliente_endereco_estado}` : ''}
+                                    {orcamento.cliente_endereco_cep ? ` (${orcamento.cliente_endereco_cep})` : ''}
+                                </p>
+                            )}
+                        </div>
                     </div>
 
                     {/* Itens */}
@@ -271,9 +284,18 @@ export default function OrcamentoPublicoPage() {
                             </div>
                         ))}
 
+                        {orcamento.valor_frete && Number(orcamento.valor_frete) > 0 && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #F2E9DB' }}>
+                                <span style={{ fontWeight: 600, fontSize: '14px', color: '#6B6B6B' }}>Frete</span>
+                                <span style={{ fontWeight: 700, fontSize: '14px', color: '#1A1A1A' }}>
+                                    R${Number(orcamento.valor_frete).toFixed(2)}
+                                </span>
+                            </div>
+                        )}
+
                         {/* Total */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', paddingTop: '16px', borderTop: '2px solid #AC5148' }}>
-                            <span style={{ fontWeight: 700, fontSize: '16px', color: '#1A1A1A' }}>Total</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: orcamento.valor_frete ? '8px' : '16px', paddingTop: orcamento.valor_frete ? '8px' : '16px', borderTop: orcamento.valor_frete ? 'none' : '2px solid #AC5148' }}>
+                            <span style={{ fontWeight: 700, fontSize: '16px', color: '#1A1A1A' }}>Total Final</span>
                             <span style={{ fontWeight: 800, fontSize: '24px', color: '#AC5148' }}>
                                 R${Number(orcamento.total).toFixed(2)}
                             </span>
