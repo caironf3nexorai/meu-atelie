@@ -1221,6 +1221,99 @@ export default function OrcamentosPage() {
                 </div>,
                 document.body
             )}
+            {/* Modal de Arquivos de Arte */}
+            {/* Modal de Visualização do Orçamento */}
+            {visualizandoOrc && (
+                <Dialog open={!!visualizandoOrc} onOpenChange={(open) => !open && setVisualizandoOrc(null)}>
+                    <DialogContent className="sm:max-w-2xl w-[95vw] max-h-[90vh] overflow-y-auto rounded-[24px] p-0 border-0 bg-transparent shadow-none" hideCloseButton>
+                        <div style={{ background: '#F2E9DB', borderRadius: '24px', overflow: 'hidden', padding: '16px' }}>
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="font-display text-2xl text-primary font-bold px-2">Detalhes do Orçamento</h3>
+                                <button className="text-text-light hover:text-text bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm" onClick={() => setVisualizandoOrc(null)}>✕</button>
+                            </div>
+                            
+                            <div style={{ background: 'white', borderRadius: '20px', border: '1px solid #E5D9CC', overflow: 'hidden', marginBottom: '16px' }}>
+                                {/* Header do orçamento */}
+                                <div style={{ background: '#2D2D2D', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div>
+                                        <p style={{ color: '#F7E1D7', fontSize: '12px', fontWeight: 700, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '1px' }}>Orçamento</p>
+                                        <h3 style={{ color: 'white', fontSize: '22px', fontWeight: 700, margin: 0 }}>Nº {String(visualizandoOrc.numero).padStart(3, '0')}</h3>
+                                    </div>
+                                    <div style={{ textAlign: 'right' }}>
+                                        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', margin: '0 0 2px' }}>Emitido em {format(new Date(visualizandoOrc.created_at), 'dd/MM/yyyy')}</p>
+                                        <p style={{ color: '#F7E1D7', fontSize: '12px', margin: 0, fontWeight: 600 }}>Válido até {format(addDays(new Date(visualizandoOrc.created_at), visualizandoOrc.validade_dias || 7), 'dd/MM/yyyy')}</p>
+                                    </div>
+                                </div>
+
+                                {/* Dados do cliente */}
+                                <div style={{ padding: '16px 24px', borderBottom: '1px solid #F2E9DB', background: '#FAFAFA' }}>
+                                    <p style={{ color: '#6B6B6B', fontSize: '12px', margin: '0 0 2px', textTransform: 'uppercase' }}>Para</p>
+                                    <p style={{ color: '#1A1A1A', fontWeight: 700, fontSize: '16px', margin: 0, paddingBottom: '4px' }}>{visualizandoOrc.cliente_nome}</p>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px', marginTop: '8px' }}>
+                                        {visualizandoOrc.cliente_contato && <p style={{ margin: 0, fontSize: '13px', color: '#4A4A4A' }}>📱 {visualizandoOrc.cliente_contato}</p>}
+                                        {visualizandoOrc.cliente_cpf && <p style={{ margin: 0, fontSize: '13px', color: '#4A4A4A' }}>🆔 CPF: {visualizandoOrc.cliente_cpf}</p>}
+                                        {visualizandoOrc.cliente_email && <p style={{ margin: 0, fontSize: '13px', color: '#4A4A4A' }}>✉️ {visualizandoOrc.cliente_email}</p>}
+                                        {(visualizandoOrc.cliente_endereco_rua || visualizandoOrc.cliente_endereco_cidade) && (
+                                            <p style={{ margin: 0, fontSize: '13px', color: '#4A4A4A', gridColumn: '1 / -1' }}>
+                                                📍 {visualizandoOrc.cliente_endereco_rua}{visualizandoOrc.cliente_endereco_numero ? `, ${visualizandoOrc.cliente_endereco_numero}` : ''}
+                                                {visualizandoOrc.cliente_endereco_bairro ? ` - ${visualizandoOrc.cliente_endereco_bairro}` : ''}
+                                                {visualizandoOrc.cliente_endereco_cidade ? ` - ${visualizandoOrc.cliente_endereco_cidade}/${visualizandoOrc.cliente_endereco_estado}` : ''}
+                                                {visualizandoOrc.cliente_endereco_cep ? ` (${visualizandoOrc.cliente_endereco_cep})` : ''}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Itens */}
+                                <div style={{ padding: '20px 24px' }}>
+                                    {visualizandoOrc.orcamento_itens?.map((item: any, i: number) => (
+                                        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '12px 0', borderBottom: i < visualizandoOrc.orcamento_itens.length - 1 ? '1px solid #F2E9DB' : 'none' }}>
+                                            <div style={{ flex: 1 }}>
+                                                <p style={{ margin: 0, fontWeight: 600, color: '#1A1A1A', fontSize: '15px' }}>{item.descricao}</p>
+                                                <p style={{ margin: '2px 0 0', color: '#6B6B6B', fontSize: '13px' }}>{item.quantidade}x · R${Number(item.valor_unitario).toFixed(2)} cada</p>
+                                            </div>
+                                            <span style={{ fontWeight: 700, color: '#1A1A1A', fontSize: '15px', marginLeft: '16px' }}>R${(item.quantidade * item.valor_unitario).toFixed(2)}</span>
+                                        </div>
+                                    ))}
+
+                                    {visualizandoOrc.valor_frete && Number(visualizandoOrc.valor_frete) > 0 && (
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #F2E9DB' }}>
+                                            <span style={{ fontWeight: 600, fontSize: '14px', color: '#6B6B6B' }}>Frete</span>
+                                            <span style={{ fontWeight: 700, fontSize: '14px', color: '#1A1A1A' }}>R${Number(visualizandoOrc.valor_frete).toFixed(2)}</span>
+                                        </div>
+                                    )}
+
+                                    {/* Total */}
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: visualizandoOrc.valor_frete ? '8px' : '16px', paddingTop: visualizandoOrc.valor_frete ? '8px' : '16px', borderTop: visualizandoOrc.valor_frete ? 'none' : '2px solid #AC5148' }}>
+                                        <span style={{ fontWeight: 700, fontSize: '16px', color: '#1A1A1A' }}>Total Final</span>
+                                        <span style={{ fontWeight: 800, fontSize: '24px', color: '#AC5148' }}>R${Number(visualizandoOrc.total).toFixed(2)}</span>
+                                    </div>
+                                </div>
+
+                                {/* Condições */}
+                                {(visualizandoOrc.condicoes_pagamento || visualizandoOrc.prazo_entrega) && (
+                                    <div style={{ padding: '16px 24px', background: '#FAFAFA', borderTop: '1px solid #F2E9DB' }}>
+                                        {visualizandoOrc.condicoes_pagamento && (
+                                            <p style={{ margin: '0 0 6px', fontSize: '14px', color: '#1A1A1A' }}><strong>Pagamento:</strong> {visualizandoOrc.condicoes_pagamento}</p>
+                                        )}
+                                        {visualizandoOrc.prazo_entrega && (
+                                            <p style={{ margin: 0, fontSize: '14px', color: '#1A1A1A' }}><strong>Prazo:</strong> {visualizandoOrc.prazo_entrega}</p>
+                                        )}
+                                    </div>
+                                )}
+                                
+                                {/* Observações */}
+                                {visualizandoOrc.observacoes && (
+                                    <div style={{ padding: '16px 24px', background: 'white', borderTop: '1px solid #F2E9DB' }}>
+                                        <p style={{ margin: '0 0 8px', fontSize: '12px', textTransform: 'uppercase', color: '#6B6B6B', fontWeight: 600 }}>Observações Adicionais</p>
+                                        <p style={{ margin: 0, fontSize: '14px', color: '#4A4A4A', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{visualizandoOrc.observacoes}</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            )}
         </div>
     );
 }
