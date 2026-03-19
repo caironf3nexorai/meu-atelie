@@ -63,10 +63,10 @@ export default function EnviosPage() {
         }
 
         const texto = encodeURIComponent(
-            `Olá ${clients?.name}! 😊\n\n` +
+            `Olá ${clients?.name}!\n\n` +
             `Sua encomenda "${description}" já foi postada!\n\n` +
-            `📦 *Código de Rastreio:* ${codigo_rastreio}\n\n` +
-            `Você já pode acompanhar a entrega. Qualquer dúvida estou à disposição! 🧵`
+            `*Código de Rastreio:* ${codigo_rastreio}\n\n` +
+            `Você já pode acompanhar a entrega. Qualquer dúvida estou à disposição!`
         );
 
         // Registrar timestamp do envio

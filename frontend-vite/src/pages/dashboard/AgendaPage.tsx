@@ -136,10 +136,16 @@ export default function AgendaPage() {
         e.preventDefault();
         setSaving(true);
         try {
+            // Remove empty strings from date/uuid fields to prevent Postgres cast errors
+            const payload: any = { ...formData };
+            if (!payload.start_date) delete payload.start_date;
+            if (!payload.delivery_date) delete payload.delivery_date;
+            if (!payload.orcamento_id) delete payload.orcamento_id;
+
             if (editingOrderId) {
-                await gestaoApi.updateOrder(editingOrderId, formData);
+                await gestaoApi.updateOrder(editingOrderId, payload);
             } else {
-                await gestaoApi.createOrder(formData);
+                await gestaoApi.createOrder(payload);
             }
 
             // Reload para trazer client joinado
