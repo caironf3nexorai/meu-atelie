@@ -1225,11 +1225,10 @@ export default function OrcamentosPage() {
             {/* Modal de Visualização do Orçamento */}
             {visualizandoOrc && (
                 <Dialog open={!!visualizandoOrc} onOpenChange={(open) => !open && setVisualizandoOrc(null)}>
-                    <DialogContent className="sm:max-w-2xl w-[95vw] max-h-[90vh] overflow-y-auto rounded-[24px] p-0 border-0 bg-transparent shadow-none" hideCloseButton>
+                    <DialogContent className="sm:max-w-2xl w-[95vw] max-h-[90vh] overflow-y-auto rounded-[24px] p-0 border-0 bg-transparent shadow-none">
                         <div style={{ background: '#F2E9DB', borderRadius: '24px', overflow: 'hidden', padding: '16px' }}>
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="font-display text-2xl text-primary font-bold px-2">Detalhes do Orçamento</h3>
-                                <button className="text-text-light hover:text-text bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm" onClick={() => setVisualizandoOrc(null)}>✕</button>
                             </div>
                             
                             <div style={{ background: 'white', borderRadius: '20px', border: '1px solid #E5D9CC', overflow: 'hidden', marginBottom: '16px' }}>
