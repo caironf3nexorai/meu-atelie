@@ -184,24 +184,47 @@ TEXTURE WITH SEGMENTS:
                 ? `\nFACELESS MODE ACTIVATED (MANDATORY RULE):\n- ABSOLUTELY NO FACIAL FEATURES ALLOWED.\n- Do NOT draw eyes, pupils, eyelashes, eyebrows, nose, nostrils, mouth, or lips.\n- Draw ONLY the blank outer contour of the face, jawline, ears, and hair framing the face.\n- The face area MUST remain completely empty white space.`
                 : `\nFACIAL FEATURES RULE:\n- Draw facial features (eyes, nose, mouth) according to the selected style.\n- Keep facial lines clean and essential.`;
 
-            const instrucaoFormato = {
+            const instrucaoFormatoObj: Record<string, string> = {
                 redondo: `
-    - Desenhe um círculo perfeito e fino (linha de 2-3px) ao redor de toda a composição como guia de bastidor
-    - O bordado deve ficar centralizado dentro do círculo com margem uniforme de 10%
-    - O círculo deve ser a última linha do desenho, bem definida
-  `,
+      - Desenhe um círculo perfeito e contínuo ao redor de toda a composição como moldura do bastidor
+      - Linha do círculo com espessura de 2-3px, bem definida e fechada
+      - TODOS os elementos do bordado devem estar COMPLETAMENTE dentro do círculo — nenhuma linha, traço ou elemento pode tocar ou ultrapassar a borda do círculo
+      - Margem de segurança de 10% entre o elemento mais externo e a linha do círculo
+    `,
                 quadrado: `
-    - Desenhe um quadrado com cantos levemente arredondados ao redor de toda a composição como guia de bastidor
-    - O bordado deve ficar centralizado dentro do quadrado com margem uniforme de 10%
-    - O quadrado deve ser a última linha do desenho, bem definida
-  `,
+      - Desenhe um quadrado com cantos levemente arredondados ao redor de toda a composição como moldura do bastidor
+      - Linha do quadrado com espessura de 2-3px, bem definida e fechada
+      - TODOS os elementos do bordado devem estar COMPLETAMENTE dentro do quadrado — nenhuma linha, traço ou elemento pode tocar ou ultrapassar a borda
+      - Margem de segurança de 10% entre o elemento mais externo e a borda do quadrado
+    `,
                 retangular: `
-    - Desenhe um retângulo com cantos levemente arredondados ao redor de toda a composição como guia de bastidor
-    - O bordado deve ficar centralizado dentro do retângulo com margem uniforme de 10%
-    - O retângulo deve ser a última linha do desenho, bem definida
-  `,
-                sem_bastidor: ``
-            }[formData.formato as string] || '';
+      - Desenhe um retângulo com cantos levemente arredondados ao redor de toda a composição como moldura do bastidor
+      - Linha do retângulo com espessura de 2-3px, bem definida e fechada
+      - TODOS os elementos do bordado devem estar COMPLETAMENTE dentro do retângulo — nenhuma linha, traço ou elemento pode tocar ou ultrapassar a borda
+      - Margem de segurança de 10% entre o elemento mais externo e a borda do retângulo
+    `,
+                sem_bastidor: `
+      - SEM moldura, SEM círculo, SEM quadrado, SEM linha de borda, SEM frame de qualquer tipo
+      - no frame, no border, no circle, no oval, no hoop, no ring, no outline border
+      - Apenas o bordado centralizado no fundo branco
+    `
+            };
+
+            const instrucaoF = instrucaoFormatoObj[formData.formato as string] || instrucaoFormatoObj['sem_bastidor'];
+
+            const instrucaoContencao = `
+  REGRA CRÍTICA DE CONTENÇÃO — VERIFICAÇÃO FINAL (MAIS IMPORTANTE):
+  - Todos os elementos do bordado devem estar COMPLETAMENTE contidos dentro da área de bordado
+  - Nenhum elemento pode ultrapassar, tocar ou extrapolar os limites da composição
+  - Elementos no topo da composição: devem ter margem de pelo menos 10% da borda superior
+  - Elementos na base: devem ter margem de pelo menos 10% da borda inferior
+  - Elementos nas laterais: devem ter margem de pelo menos 10% das bordas laterais
+  - Elementos que se estendem naturalmente (conchas, flores, galhos): cortar elegantemente antes da borda, nunca ultrapassar
+  - A composição deve parecer centralizada e equilibrada dentro dos limites
+  - all elements must be fully contained within the embroidery area
+  - no element should cross or touch the border line
+  - maintain 10% safety margin from all edges
+`;
 
             promptUsed = `You are an expert in creating embroidery transfer patterns (riscos de bordado).
 ${formData.modo === 'texto' ? 'Generate a black and white drawing based on the following description: "' + formData.descricao + '"' : 'Generate a black and white drawing from the reference image provided.'}
@@ -238,7 +261,9 @@ ${formData.modo === 'texto' ? '- Remove any text from the drawing, no text, no l
 ${facelessPrompt}
 
 6. HOOP / FRAME SHAPE
-${instrucaoFormato}
+${instrucaoF}
+
+${instrucaoContencao}
 
 ${formData.modo === 'texto' ? 'Generate a design following ALL the rules above based on the description.' : 'REFERENCE IMAGE: Convert this image following ALL the rules above. Generate now.'}`;
 
