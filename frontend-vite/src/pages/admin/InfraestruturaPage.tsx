@@ -21,6 +21,10 @@ export default function InfraestruturaPage() {
     const [limites, setLimites] = useState<any>({});
     const [loadingMetricas, setLoadingMetricas] = useState(true);
 
+    // Buscar logs de limpeza
+    const [logsLimpeza, setLogsLimpeza] = useState<any[]>([]);
+    const [executandoLimpeza, setExecutandoLimpeza] = useState(false);
+
     useEffect(() => {
         const fetchTudo = async () => {
             const mes = new Date().toISOString().slice(0, 7);
@@ -64,6 +68,15 @@ export default function InfraestruturaPage() {
             });
             setCircuitBreakers(cbData || []);
             setLimites(limitesMap);
+
+            // Fetch logs de limpeza
+            const { data: logs } = await supabase
+                .from('log_limpeza')
+                .select('*')
+                .order('executado_em', { ascending: false })
+                .limit(10);
+            setLogsLimpeza(logs || []);
+
             setLoadingMetricas(false);
         };
         fetchTudo();
@@ -90,6 +103,44 @@ export default function InfraestruturaPage() {
         setCircuitBreakers(prev =>
             prev.map(cb => cb.chave === chave ? { ...cb, ativo: ativar } : cb)
         );
+    };
+
+    // Função para executar limpeza manual
+    const handleLimpezaManual = async () => {
+        setExecutandoLimpeza(true);
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const res = await fetch(
+                `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/limpar-dados-expirados`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${session?.access_token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+            if (!res.ok) throw new Error('Erro na function');
+            const data = await res.json();
+            alert(
+                `Limpeza concluída! ` +
+                `${data.artes_expiradas} artes, ` +
+                `${data.notificacoes_antigas} notificações e ` +
+                `${data.orcamento_arquivos_antigos} arquivos removidos.`
+            );
+            // Recarregar logs
+            const { data: logs } = await supabase
+                .from('log_limpeza')
+                .select('*')
+                .order('executado_em', { ascending: false })
+                .limit(10);
+            setLogsLimpeza(logs || []);
+        } catch (err) {
+            alert('Erro ao executar limpeza.');
+            console.error(err);
+        } finally {
+            setExecutandoLimpeza(false);
+        }
     };
 
     const recursos = [
@@ -252,6 +303,71 @@ export default function InfraestruturaPage() {
                             </div>
                         );
                     })}
+                </div>
+            </div>
+
+            {/* Widget de Limpeza Automática */}
+            <div style={{ background: 'white', borderRadius: '20px', padding: '24px', border: '1px solid #E5D9CC' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                    <div>
+                        <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#1A1A1A', margin: '0 0 4px' }}>
+                            🧹 Limpeza Automática
+                        </h2>
+                        <p style={{ fontSize: '13px', color: '#6B6B6B', margin: 0 }}>
+                            Roda todo dia às 3h. Execute manualmente quando necessário.
+                        </p>
+                    </div>
+                    <button
+                        onClick={handleLimpezaManual}
+                        disabled={executandoLimpeza}
+                        style={{ padding: '10px 20px', borderRadius: '12px', background: executandoLimpeza ? '#E5D9CC' : '#AC5148', color: executandoLimpeza ? '#AAAAAA' : 'white', border: 'none', fontWeight: 700, fontSize: '13px', cursor: executandoLimpeza ? 'not-allowed' : 'pointer' }}>
+                        {executandoLimpeza ? '⏳ Limpando...' : '🧹 Executar agora'}
+                    </button>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '20px' }}>
+                    {[
+                        { icon: '🎨', titulo: 'Artes pendentes', regra: 'Deletadas após 7 dias', cor: '#C29A51' },
+                        { icon: '🔔', titulo: 'Notificações', regra: 'Lidas: 30d · Não lidas: 90d', cor: '#AC5148' },
+                        { icon: '📎', titulo: 'Arquivos do cliente', regra: 'Orçamentos fechados > 60d', cor: '#6B6B6B' },
+                    ].map((item, i) => (
+                        <div key={i} style={{ background: '#FAFAFA', borderRadius: '12px', padding: '14px', border: '1px solid #F2E9DB' }}>
+                            <div style={{ fontSize: '24px', marginBottom: '8px' }}>{item.icon}</div>
+                            <p style={{ margin: '0 0 4px', fontWeight: 700, fontSize: '13px', color: '#1A1A1A' }}>{item.titulo}</p>
+                            <p style={{ margin: 0, fontSize: '11px', color: '#7A6A5A', lineHeight: 1.5 }}>{item.regra}</p>
+                        </div>
+                    ))}
+                </div>
+
+                <div>
+                    <p style={{ fontSize: '12px', fontWeight: 700, color: '#6B6B6B', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 12px' }}>Histórico recente</p>
+                    {logsLimpeza.length === 0 ? (
+                        <p style={{ fontSize: '13px', color: '#AAAAAA', margin: 0 }}>Nenhuma limpeza executada ainda.</p>
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {logsLimpeza.map(log => (
+                                <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: '#FAFAFA', borderRadius: '10px', border: '1px solid #F2E9DB' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <span style={{ fontSize: '16px' }}>
+                                            {log.tipo === 'artes_expiradas' ? '🎨' : log.tipo === 'notificacoes' ? '🔔' : '📎'}
+                                        </span>
+                                        <div>
+                                            <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: '#1A1A1A' }}>
+                                                {log.tipo === 'artes_expiradas' ? 'Artes expiradas' : log.tipo === 'notificacoes' ? 'Notificações' : 'Arquivos de orçamento'}
+                                            </p>
+                                            <p style={{ margin: 0, fontSize: '11px', color: '#6B6B6B' }}>{new Date(log.executado_em).toLocaleString('pt-BR')}</p>
+                                        </div>
+                                    </div>
+                                    <div style={{ textAlign: 'right' }}>
+                                        <p style={{ margin: 0, fontWeight: 700, fontSize: '14px', color: '#AC5148' }}>{log.registros_deletados} registros</p>
+                                        {log.storage_liberado_mb > 0 && (
+                                            <p style={{ margin: 0, fontSize: '11px', color: '#16A34A' }}>~{Number(log.storage_liberado_mb).toFixed(1)} MB liberados</p>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
 

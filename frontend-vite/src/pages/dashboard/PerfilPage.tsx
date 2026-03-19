@@ -140,7 +140,14 @@ export default function ProfilePage() {
             const { data } = supabase.storage
                 .from('atelie-assets')
                 .getPublicUrl(path)
-            setAtelieLogoUrl(data.publicUrl)
+                
+            const urlComCache = `${data.publicUrl}?t=${Date.now()}`
+            setAtelieLogoUrl(urlComCache)
+            
+            await supabase
+                .from('profiles')
+                .update({ atelie_logo_url: data.publicUrl })
+                .eq('id', user.id)
         } else {
             showAlert('Erro', 'Não foi possível enviar a imagem.')
         }
