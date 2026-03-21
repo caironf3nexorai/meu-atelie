@@ -102,24 +102,7 @@ export default function AgendaPage() {
         }
     }, [location.state, clients]);
 
-    // Calcular data de entrega automática baseada no prazo do orçamento
-    useEffect(() => {
-        if (formData.start_date && prazoDiasExtra && formData.start_date.length === 10) {
-            const yearAsNumber = parseInt(formData.start_date.split('-')[0], 10);
-            if (yearAsNumber >= 2000) {
-                const startDate = new Date(formData.start_date + 'T12:00:00Z');
-                // Adiciona dias corridos baseado no numero extraído
-                startDate.setDate(startDate.getDate() + prazoDiasExtra);
-                const yyyy = startDate.getFullYear();
-                const mm = String(startDate.getMonth() + 1).padStart(2, '0');
-                const dd = String(startDate.getDate()).padStart(2, '0');
-                
-                setFormData(prev => ({ ...prev, delivery_date: `${yyyy}-${mm}-${dd}` }));
-                setPrazoDiasExtra(null); // Limpa para não recalcular se o user mexer dps
-                showAlert('Prazo Calculado', `A data de entrega foi definida automaticamente para somar os ${prazoDiasExtra} dias do orçamento.`);
-            }
-        }
-    }, [formData.start_date]);
+    // Removendo calculo automatico ruim para mobile, substituindo por botão inline
 
     async function loadOrders() {
         try {
@@ -305,13 +288,36 @@ export default function AgendaPage() {
                                 <Label>Descrição do Bordado</Label>
                                 <Input required value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="Ex: Bastidor porta-maternidade 20cm" />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                 <div className="space-y-2">
                                     <Label>Data de Início</Label>
                                     <Input type="date" value={formData.start_date} onChange={e => setFormData({ ...formData, start_date: e.target.value })} />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label>Data de Entrega</Label>
+                                    <div className="flex justify-between items-center">
+                                        <Label>Data de Entrega</Label>
+                                        {prazoDiasExtra && (
+                                            <Button 
+                                                type="button" 
+                                                variant="ghost" 
+                                                onClick={() => {
+                                                    if (formData.start_date) {
+                                                        const d = new Date(formData.start_date + 'T12:00:00Z');
+                                                        d.setDate(d.getDate() + prazoDiasExtra);
+                                                        const yyyy = d.getFullYear();
+                                                        const mm = String(d.getMonth() + 1).padStart(2, '0');
+                                                        const dd = String(d.getDate()).padStart(2, '0');
+                                                        setFormData(prev => ({ ...prev, delivery_date: `${yyyy}-${mm}-${dd}` }));
+                                                    } else {
+                                                        showAlert('Atenção', 'Preencha a Data de Início primeiro.');
+                                                    }
+                                                }}
+                                                className="h-6 px-2 text-[10px] bg-primary/10 text-primary hover:bg-primary/20"
+                                            >
+                                                +{prazoDiasExtra} dias
+                                            </Button>
+                                        )}
+                                    </div>
                                     <Input required type="date" value={formData.delivery_date} onChange={e => setFormData({ ...formData, delivery_date: e.target.value })} />
                                 </div>
                             </div>
