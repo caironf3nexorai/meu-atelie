@@ -266,6 +266,7 @@ export default function AgendaPage() {
                     if (!open) {
                         setEditingOrderId(null);
                         setFormData({ client_id: '', description: '', start_date: '', delivery_date: '', value: 0, notes: '', status: 'em_aberto' as any, photo_url: null, orcamento_id: undefined });
+                        setPrazoDiasExtra(null);
                     }
                 }}>
                     <DialogTrigger asChild>

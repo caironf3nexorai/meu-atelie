@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Menu, Sparkles, User, X, ShoppingBag, Home, Image as ImageIcon, Paintbrush, DollarSign, PieChart, LogOut, Lock, Shield, Gift, Calendar, Users, Package, Timer, FileText } from 'lucide-react';
+import { Menu, Sparkles, User, X, ShoppingBag, Home, Image as ImageIcon, Paintbrush, DollarSign, PieChart, LogOut, Lock, Shield, Gift, Calendar, Users, Package, Timer, FileText, Truck } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -19,6 +19,7 @@ const navItems = [
     { href: '/dashboard/agenda', label: 'Agenda', icon: Calendar, isPremium: true },
     { href: '/dashboard/clientes', label: 'Clientes', icon: Users, isPremium: true },
     { href: '/dashboard/orcamentos', label: 'Orçamentos', icon: FileText, isPremium: true },
+    { href: '/dashboard/envios', label: 'Envios', icon: Truck, isPremium: true },
     { href: '/dashboard/estoque', label: 'Estoque', icon: Package, isPremium: true },
     { href: '/dashboard/cronometro', label: 'Cronômetro', icon: Timer, isPremium: true },
     { href: '/indicacoes', label: 'Indicações', icon: Gift, isPremium: false },
