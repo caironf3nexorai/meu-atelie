@@ -168,8 +168,7 @@ html, body {
 
 /* Dialog/Modal: full-width on mobile with proper padding */
 @media (max-width: 639px) {
-  [role="dialog"],
-  [data-radix-popper-content-wrapper] [role="dialog"] {
+  .app-dialog-content {
     max-width: calc(100vw - 32px) !important;
     width: calc(100vw - 32px) !important;
     padding: 20px !important;
@@ -177,14 +176,14 @@ html, body {
   }
 
   /* DialogFooter stacking on mobile */
-  [role="dialog"] footer,
-  [role="dialog"] [class*="DialogFooter"] {
+  .app-dialog-content footer,
+  .app-dialog-content [class*="DialogFooter"] {
     flex-direction: column !important;
     gap: 8px !important;
   }
 
-  [role="dialog"] footer button,
-  [role="dialog"] [class*="DialogFooter"] button {
+  .app-dialog-content footer button,
+  .app-dialog-content [class*="DialogFooter"] button {
     width: 100% !important;
   }
 
