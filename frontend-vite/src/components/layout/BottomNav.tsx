@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, PlusCircle, PieChart, User, ShoppingBag, Shield, Calendar, Users, Package, FileText, Truck } from 'lucide-react';
+import { Home, PlusCircle, PieChart, User, ShoppingBag, Shield, Calendar, Users, Package, FileText, Truck, Paintbrush, Gift, Lock, DollarSign, Sparkles, Timer } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UpgradeModal } from '../shared/UpgradeModal';
 import { useAuth } from '@/lib/hooks/useAuth';
@@ -72,31 +72,88 @@ export function BottomNav() {
             </nav>
 
             <Sheet open={showGestaoSheet} onOpenChange={setShowGestaoSheet}>
-                <SheetContent side="bottom" className="rounded-t-3xl pb-safe">
+                <SheetContent side="bottom" className="rounded-t-3xl pb-safe h-[85vh] overflow-y-auto">
                     <SheetHeader className="mb-6">
-                        <SheetTitle className="font-display text-text text-xl">Gestão do Ateliê</SheetTitle>
+                        <SheetTitle className="font-display text-text text-xl">Menu Completo</SheetTitle>
                     </SheetHeader>
-                    <div className="flex flex-col gap-3">
-                        <Link to="/dashboard/agenda" onClick={() => setShowGestaoSheet(false)} className="flex items-center gap-4 p-4 rounded-2xl bg-surface hover:bg-surface-warm border border-border-light text-text transition-colors shadow-sm">
-                            <div className="bg-primary/10 p-2.5 rounded-xl text-primary"><Calendar className="w-5 h-5" /></div>
-                            <span className="font-medium font-ui text-base">Agenda</span>
-                        </Link>
-                        <Link to="/dashboard/clientes" onClick={() => setShowGestaoSheet(false)} className="flex items-center gap-4 p-4 rounded-2xl bg-surface hover:bg-surface-warm border border-border-light text-text transition-colors shadow-sm">
-                            <div className="bg-primary/10 p-2.5 rounded-xl text-primary"><Users className="w-5 h-5" /></div>
-                            <span className="font-medium font-ui text-base">Clientes</span>
-                        </Link>
-                        <Link to="/dashboard/orcamentos" onClick={() => setShowGestaoSheet(false)} className="flex items-center gap-4 p-4 rounded-2xl bg-surface hover:bg-surface-warm border border-border-light text-text transition-colors shadow-sm">
-                            <div className="bg-primary/10 p-2.5 rounded-xl text-primary"><FileText className="w-5 h-5" /></div>
-                            <span className="font-medium font-ui text-base">Orçamentos</span>
-                        </Link>
-                        <Link to="/dashboard/estoque" onClick={() => setShowGestaoSheet(false)} className="flex items-center gap-4 p-4 rounded-2xl bg-surface hover:bg-surface-warm border border-border-light text-text transition-colors shadow-sm">
-                            <div className="bg-primary/10 p-2.5 rounded-xl text-primary"><Package className="w-5 h-5" /></div>
-                            <span className="font-medium font-ui text-base">Estoque</span>
-                        </Link>
-                        <Link to="/dashboard/envios" onClick={() => setShowGestaoSheet(false)} className="flex items-center gap-4 p-4 rounded-2xl bg-surface hover:bg-surface-warm border border-border-light text-text transition-colors shadow-sm">
-                            <div className="bg-primary/10 p-2.5 rounded-xl text-primary"><Truck className="w-5 h-5" /></div>
-                            <span className="font-medium font-ui text-base">Envios</span>
-                        </Link>
+                    
+                    <div className="flex flex-col gap-6">
+                        {/* Ferramentas e Loja */}
+                        <div>
+                            <h3 className="text-[10px] font-bold text-[#2D2D2D]/60 tracking-wider uppercase ml-2 mb-3">Estúdio & Loja</h3>
+                            <div className="grid grid-cols-2 gap-3">
+                                <Link to="/gerar/risco" onClick={() => setShowGestaoSheet(false)} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-surface hover:bg-surface-warm border border-border-light text-text transition-colors shadow-sm">
+                                    <div className="bg-[#E2C5B9]/30 p-2.5 rounded-xl text-[#2D2D2D]"><PlusCircle className="w-5 h-5" /></div>
+                                    <span className="font-medium font-ui text-xs text-center">Gerador P&B</span>
+                                </Link>
+                                <Link to="/gerar/bordado-colorido" onClick={() => setShowGestaoSheet(false)} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-surface hover:bg-surface-warm border border-border-light text-text transition-colors shadow-sm">
+                                    <div className="bg-[#E2C5B9]/30 p-2.5 rounded-xl text-[#2D2D2D]"><Paintbrush className="w-5 h-5" /></div>
+                                    <span className="font-medium font-ui text-xs text-center">Bordado Colorido</span>
+                                </Link>
+                                <Link to="/dashboard/loja" onClick={() => setShowGestaoSheet(false)} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-surface hover:bg-surface-warm border border-border-light text-text transition-colors shadow-sm">
+                                    <div className="bg-[#E2C5B9]/30 p-2.5 rounded-xl text-[#2D2D2D]"><ShoppingBag className="w-5 h-5" /></div>
+                                    <span className="font-medium font-ui text-xs text-center">Loja</span>
+                                </Link>
+                                <Link to="/indicacoes" onClick={() => setShowGestaoSheet(false)} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-surface hover:bg-surface-warm border border-border-light text-text transition-colors shadow-sm">
+                                    <div className="bg-[#E2C5B9]/30 p-2.5 rounded-xl text-[#2D2D2D]"><Gift className="w-5 h-5" /></div>
+                                    <span className="font-medium font-ui text-xs text-center">Indicações</span>
+                                </Link>
+                            </div>
+                        </div>
+
+                        {/* Gestão e Financeiro Premium */}
+                        <div>
+                            <h3 className="text-[10px] font-bold text-[#AC5148] tracking-wider uppercase ml-2 mb-3 flex items-center gap-1">
+                                Premium <Lock className="w-3 h-3 font-normal opacity-70" />
+                            </h3>
+                            <div className="grid grid-cols-2 gap-3">
+                                <Link to="/precificacao" onClick={(e) => { if(!isPremium) { e.preventDefault(); setShowUpgradeModal(true); } else { setShowGestaoSheet(false); } }} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-surface hover:bg-surface-warm border border-border-light text-text transition-colors shadow-sm relative">
+                                    <div className="bg-primary/10 p-2.5 rounded-xl text-primary"><DollarSign className="w-5 h-5" /></div>
+                                    <span className="font-medium font-ui text-xs text-center">Precificação</span>
+                                    {!isPremium && <Lock className="w-3 h-3 absolute top-3 right-3 text-primary/40" />}
+                                </Link>
+                                <Link to="/financeiro" onClick={(e) => { if(!isPremium) { e.preventDefault(); setShowUpgradeModal(true); } else { setShowGestaoSheet(false); } }} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-surface hover:bg-surface-warm border border-border-light text-text transition-colors shadow-sm relative">
+                                    <div className="bg-primary/10 p-2.5 rounded-xl text-primary"><PieChart className="w-5 h-5" /></div>
+                                    <span className="font-medium font-ui text-xs text-center">Financeiro</span>
+                                    {!isPremium && <Lock className="w-3 h-3 absolute top-3 right-3 text-primary/40" />}
+                                </Link>
+                                <Link to="/estrategia" onClick={(e) => { if(!isPremium) { e.preventDefault(); setShowUpgradeModal(true); } else { setShowGestaoSheet(false); } }} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-surface hover:bg-surface-warm border border-border-light text-text transition-colors shadow-sm relative">
+                                    <div className="bg-primary/10 p-2.5 rounded-xl text-primary"><Sparkles className="w-5 h-5" /></div>
+                                    <span className="font-medium font-ui text-xs text-center">Estratégia IA</span>
+                                    {!isPremium && <Lock className="w-3 h-3 absolute top-3 right-3 text-primary/40" />}
+                                </Link>
+                                <Link to="/dashboard/agenda" onClick={(e) => { if(!isPremium) { e.preventDefault(); setShowUpgradeModal(true); } else { setShowGestaoSheet(false); } }} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-surface hover:bg-surface-warm border border-border-light text-text transition-colors shadow-sm relative">
+                                    <div className="bg-primary/10 p-2.5 rounded-xl text-primary"><Calendar className="w-5 h-5" /></div>
+                                    <span className="font-medium font-ui text-xs text-center">Agenda</span>
+                                    {!isPremium && <Lock className="w-3 h-3 absolute top-3 right-3 text-primary/40" />}
+                                </Link>
+                                <Link to="/dashboard/clientes" onClick={(e) => { if(!isPremium) { e.preventDefault(); setShowUpgradeModal(true); } else { setShowGestaoSheet(false); } }} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-surface hover:bg-surface-warm border border-border-light text-text transition-colors shadow-sm relative">
+                                    <div className="bg-primary/10 p-2.5 rounded-xl text-primary"><Users className="w-5 h-5" /></div>
+                                    <span className="font-medium font-ui text-xs text-center">Clientes</span>
+                                    {!isPremium && <Lock className="w-3 h-3 absolute top-3 right-3 text-primary/40" />}
+                                </Link>
+                                <Link to="/dashboard/orcamentos" onClick={(e) => { if(!isPremium) { e.preventDefault(); setShowUpgradeModal(true); } else { setShowGestaoSheet(false); } }} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-surface hover:bg-surface-warm border border-border-light text-text transition-colors shadow-sm relative">
+                                    <div className="bg-primary/10 p-2.5 rounded-xl text-primary"><FileText className="w-5 h-5" /></div>
+                                    <span className="font-medium font-ui text-xs text-center">Orçamentos</span>
+                                    {!isPremium && <Lock className="w-3 h-3 absolute top-3 right-3 text-primary/40" />}
+                                </Link>
+                                <Link to="/dashboard/envios" onClick={(e) => { if(!isPremium) { e.preventDefault(); setShowUpgradeModal(true); } else { setShowGestaoSheet(false); } }} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-surface hover:bg-surface-warm border border-border-light text-text transition-colors shadow-sm relative">
+                                    <div className="bg-primary/10 p-2.5 rounded-xl text-primary"><Truck className="w-5 h-5" /></div>
+                                    <span className="font-medium font-ui text-xs text-center">Envios</span>
+                                    {!isPremium && <Lock className="w-3 h-3 absolute top-3 right-3 text-primary/40" />}
+                                </Link>
+                                <Link to="/dashboard/estoque" onClick={(e) => { if(!isPremium) { e.preventDefault(); setShowUpgradeModal(true); } else { setShowGestaoSheet(false); } }} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-surface hover:bg-surface-warm border border-border-light text-text transition-colors shadow-sm relative">
+                                    <div className="bg-primary/10 p-2.5 rounded-xl text-primary"><Package className="w-5 h-5" /></div>
+                                    <span className="font-medium font-ui text-xs text-center">Estoque</span>
+                                    {!isPremium && <Lock className="w-3 h-3 absolute top-3 right-3 text-primary/40" />}
+                                </Link>
+                                <Link to="/dashboard/cronometro" onClick={(e) => { if(!isPremium) { e.preventDefault(); setShowUpgradeModal(true); } else { setShowGestaoSheet(false); } }} className="flex flex-col items-center gap-2 p-4 col-span-2 rounded-2xl bg-surface hover:bg-surface-warm border border-border-light text-text transition-colors shadow-sm relative">
+                                    <div className="bg-primary/10 p-2.5 rounded-xl text-primary"><Timer className="w-5 h-5" /></div>
+                                    <span className="font-medium font-ui text-xs text-center">Cronômetro</span>
+                                    {!isPremium && <Lock className="w-3 h-3 absolute top-3 right-3 text-primary/40" />}
+                                </Link>
+                            </div>
+                        </div>
                     </div>
                 </SheetContent>
             </Sheet>
