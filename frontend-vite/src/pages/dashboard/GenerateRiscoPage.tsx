@@ -1,5 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
+import { gerarPDFRisco } from '@/utils/gerarPDFRisco';
 import { UploadCloud, X, ArrowRight, Wand2, Download, RefreshCw, Scissors, Image as ImageIcon, AlertCircle, Loader2, ChevronDown, Smile } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -26,7 +26,9 @@ export default function RiscoPage() {
     const [imageExpiresAt, setImageExpiresAt] = useState<string | null>(null);
     const [timeLeft, setTimeLeft] = useState<string>('');
     const [formato, setFormato] = useState<'redondo' | 'quadrado' | 'retangular' | 'sem_bastidor'>('sem_bastidor');
-
+    const [tamanhoRisco, setTamanhoRisco] = useState<13|16|20|22>(16);
+    const [removerMolduraAtivo, setRemoverMolduraAtivo] = useState(false);
+    const [gerandoPDF, setGerandoPDF] = useState(false);
     // Dicas colapsáveis
     const [dicasRiscoAbertas, setDicasRiscoAbertas] = useState(() => {
         return localStorage.getItem('dicas-risco-fechadas') !== 'true';
@@ -548,15 +550,102 @@ export default function RiscoPage() {
                                     </div>
                                 </div>
 
-                                <div className="flex flex-col gap-4 justify-center">
-                                    <Button onClick={handleDownload} className="h-14 rounded-2xl bg-primary hover:bg-primary-dark shadow-md text-lg w-full flex justify-between px-6">
-                                        Baixar Risco (PNG) <Download className="w-5 h-5 ml-2" />
-                                    </Button>
-                                    <Button variant="outline" onClick={() => { setStep(1); setResultImg(null); removeFile(); setDescricao(''); }} className="h-14 rounded-2xl border-border hover:bg-surface-warm text-text text-base w-full flex justify-between px-6">
-                                        Gerar Novo Risco <RefreshCw className="w-5 h-5 ml-2" />
+                                <div className="flex flex-col gap-4 justify-center w-full">
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                        {/* Seletor de tamanho */}
+                                        <div>
+                                            <label style={{ fontWeight: 700, fontSize: '13px', color: '#1A1A1A', display: 'block', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                                📐 Tamanho do risco no PDF
+                                            </label>
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+                                                {([13, 16, 20, 22] as const).map(cm => (
+                                                    <button
+                                                        key={cm}
+                                                        onClick={() => setTamanhoRisco(cm)}
+                                                        style={{
+                                                            padding: '12px 8px', borderRadius: '12px', textAlign: 'center',
+                                                            border: `2px solid ${tamanhoRisco === cm ? '#AC5148' : '#E5D9CC'}`,
+                                                            background: tamanhoRisco === cm ? '#FDF0EE' : 'white',
+                                                            cursor: 'pointer', transition: 'all 0.2s ease'
+                                                        }}
+                                                    >
+                                                        <div style={{ fontWeight: 800, fontSize: '18px', color: tamanhoRisco === cm ? '#AC5148' : '#1A1A1A' }}>
+                                                            {cm}cm
+                                                        </div>
+                                                        <div style={{ fontSize: '10px', color: '#AAAAAA', marginTop: '2px' }}>
+                                                            {{13: 'Bastidor P', 16: 'Bastidor M', 20: 'Bastidor G', 22: 'Bastidor GG'}[cm]}
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            <p style={{ fontSize: '12px', color: '#7A6A5A', margin: '8px 0 0', textAlign: 'center' }}>
+                                                Centralizado em folha A4 · Imprimir em 100% (tamanho real)
+                                            </p>
+                                        </div>
+
+                                        {/* Toggle remover moldura */}
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: '#FAFAFA', borderRadius: '12px', border: '1px solid #E5D9CC', opacity: formato === 'sem_bastidor' ? 0.5 : 1 }}>
+                                            <div>
+                                                <p style={{ margin: 0, fontWeight: 700, fontSize: '14px', color: '#1A1A1A' }}>Remover moldura</p>
+                                                <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#7A6A5A' }}>Baixa somente o desenho, sem o círculo/quadrado</p>
+                                            </div>
+                                            <div
+                                                onClick={() => { if(formato !== 'sem_bastidor') setRemoverMolduraAtivo(prev => !prev); }}
+                                                style={{ width: '48px', height: '26px', borderRadius: '999px', cursor: formato === 'sem_bastidor' ? 'not-allowed' : 'pointer', background: removerMolduraAtivo ? '#AC5148' : '#E5D9CC', position: 'relative', transition: 'background 0.3s ease', flexShrink: 0 }}
+                                            >
+                                                <div style={{ position: 'absolute', top: '3px', left: removerMolduraAtivo ? '25px' : '3px', width: '20px', height: '20px', borderRadius: '50%', background: 'white', transition: 'left 0.3s ease', boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }} />
+                                            </div>
+                                        </div>
+
+                                        {/* Aviso sobre impressão */}
+                                        <div style={{ background: '#FDF8F0', borderRadius: '10px', padding: '10px 14px', border: '1px solid #E5D9CC', display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                                            <span style={{ fontSize: '16px', flexShrink: 0 }}>⚠️</span>
+                                            <p style={{ margin: 0, fontSize: '12px', color: '#7A6A5A', lineHeight: 1.5 }}>
+                                                Ao imprimir, selecione <strong>"Tamanho real"</strong> ou <strong>"100%"</strong>. Nunca use "Ajustar à página".
+                                            </p>
+                                        </div>
+
+                                        {/* Botões */}
+                                        <div style={{ display: 'flex', gap: '10px' }}>
+                                            <button
+                                                onClick={() => { setStep(1); setResultImg(null); removeFile(); setDescricao(''); setRemoverMolduraAtivo(false); }}
+                                                style={{ flex: 1, padding: '13px', borderRadius: '12px', background: 'white', border: '1px solid #E5D9CC', fontWeight: 700, fontSize: '14px', color: '#AC5148', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                            >
+                                                Novo
+                                            </button>
+                                            <button
+                                                onClick={async () => {
+                                                    if (!resultImg) return;
+                                                    setGerandoPDF(true);
+                                                    try {
+                                                        await gerarPDFRisco(resultImg, {
+                                                            tamanho: tamanhoRisco,
+                                                            removerMoldura: removerMolduraAtivo,
+                                                            nomeArquivo: 'risco'
+                                                        });
+                                                        showAlert('Sucesso!', 'PDF Gerado com sucesso!');
+                                                    } catch (err) {
+                                                        console.error(err);
+                                                        showAlert('Erro', 'Erro ao gerar PDF. Tente novamente.');
+                                                    } finally {
+                                                        setGerandoPDF(false);
+                                                    }
+                                                }}
+                                                disabled={gerandoPDF}
+                                                style={{ flex: 2, padding: '13px', borderRadius: '12px', background: gerandoPDF ? '#E5D9CC' : '#AC5148', color: gerandoPDF ? '#AAAAAA' : 'white', border: 'none', fontWeight: 700, fontSize: '14px', cursor: gerandoPDF ? 'not-allowed' : 'pointer', boxShadow: gerandoPDF ? 'none' : '0 4px 16px rgba(172,81,72,0.3)', transition: 'all 0.2s ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                            >
+                                                <div className="mx-auto flex gap-2">
+                                                    {gerandoPDF ? '⏳ Preparando...' : `📄 Baixar PDF ${tamanhoRisco}cm`}
+                                                </div>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <Button variant="ghost" onClick={handleDownload} className="text-text-light hover:text-text rounded-full mt-2 w-full text-sm">
+                                        Baixar apenas a imagem (PNG) <Download className="w-4 h-4 ml-2" />
                                     </Button>
 
-                                    <div className="mt-8 bg-accent/5 border border-accent/20 rounded-2xl p-6">
+                                    <div className="mt-4 bg-accent/5 border border-accent/20 rounded-2xl p-6">
                                         <h4 className="font-display text-lg text-text mb-2">✨ Quer ver em cores?</h4>
                                         <p className="font-ui text-text-light text-sm mb-4">Gere um bordado colorido a partir desta mesma ideia!</p>
                                         <Button variant="link" onClick={() => window.location.href = '/gerar/bordado-colorido'} className="text-accent hover:text-accent-light p-0 h-auto font-semibold">
