@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { createClient } from '@/lib/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { gerarPDFRisco } from '@/utils/gerarPDFRisco';
+import { removerFundoBranco, removerMoldura, cortarAoBastidor } from '@/utils/removerFundo';
 import { useModal } from '@/contexts/ModalContext';
 
 export default function BordadoColoridoPage() {
@@ -28,7 +29,7 @@ export default function BordadoColoridoPage() {
     // Etapa 2
     const [nomeTexto, setNomeTexto] = useState('');
     const [ocasiao, setOcasiao] = useState<string | null>(null);
-    const [formato, setFormato] = useState('redondo');
+    const [formato, setFormato] = useState<'redondo' | 'quadrado' | 'retangular' | 'sem_bastidor'>('redondo');
 
     // Etapa 3
     const [coresSelecionadas, setCoresSelecionadas] = useState<string[]>([]);
@@ -36,14 +37,77 @@ export default function BordadoColoridoPage() {
 
     // Estado Geral e Etapa 4
     const [isGenerating, setIsGenerating] = useState(false);
-    const [resultImg, setResultImg] = useState<string | null>(null);
+    const [imagemOriginal, setImagemOriginal] = useState<string | null>(null);
+    const [imagemPreview, setImagemPreview] = useState<string | null>(null);
+    const [processandoPreview, setProcessandoPreview] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
     const [needsCredits, setNeedsCredits] = useState(false);
 
     // PDF Download States
-    const [tamanhoRisco, setTamanhoRisco] = useState<13|16|20|22>(16);
+    const [tamanhoRisco, setTamanhoRisco] = useState<13|16|20>(16);
     const [removerMolduraAtivo, setRemoverMolduraAtivo] = useState(false);
     const [gerandoPDF, setGerandoPDF] = useState(false);
+    
+    // Custom Sizing
+    const [tamanhoPersonalizado, setTamanhoPersonalizado] = useState<string>('');
+    const [usandoPersonalizado, setUsandoPersonalizado] = useState(false);
+    const tamanhoEfetivo = usandoPersonalizado && Number(tamanhoPersonalizado) > 0 ? Number(tamanhoPersonalizado) : tamanhoRisco;
+    const tamanhoPersonalizadoValido = Number(tamanhoPersonalizado) >= 5 && Number(tamanhoPersonalizado) <= 20;
+
+    // Live Preview functions
+    const atualizarPreview = async (url: string = imagemOriginal!, devRemover: boolean = removerMolduraAtivo) => {
+        if (!url) return;
+        setProcessandoPreview(true);
+        try {
+            let imagemProcessada = url;
+            if (devRemover) {
+                imagemProcessada = await removerMoldura(url, formato);
+            }
+            const imagemFinal = await removerFundoBranco(imagemProcessada);
+            setImagemPreview(imagemFinal);
+        } catch (err) {
+            console.error('Erro ao processar preview:', err);
+            setImagemPreview(url);
+        } finally {
+            setProcessandoPreview(false);
+        }
+    };
+
+    const handleImagemGerada = async (url: string) => {
+        setProcessandoPreview(true);
+        try {
+            const urlRecortada = await cortarAoBastidor(url);
+            setImagemOriginal(urlRecortada);
+            await atualizarPreview(urlRecortada, false);
+        } catch (err) {
+            console.error('Erro no AutoCrop do Bastidor:', err);
+            setImagemOriginal(url);
+            await atualizarPreview(url, false);
+        }
+    };
+
+    const handleToggleMoldura = async (valor: boolean) => {
+        setRemoverMolduraAtivo(valor);
+        await atualizarPreview(imagemOriginal!, valor);
+    };
+
+    const handleTamanhoChange = (cm: 13 | 16 | 20) => {
+        setTamanhoRisco(cm);
+        setUsandoPersonalizado(false);
+        setTamanhoPersonalizado('');
+    };
+
+    const handleGerarNovamente = () => {
+        setImagemOriginal(null);
+        setImagemPreview(null);
+        setRemoverMolduraAtivo(false);
+        setTamanhoRisco(16);
+        setUsandoPersonalizado(false);
+        setReferenceImageBase64(null);
+        setImagePreviewUrl(null);
+        setDescricao('');
+        setStep(1);
+    };
 
     // Dicas colapsáveis
     const [dicasAbertas, setDicasAbertas] = useState(() => {
@@ -204,7 +268,7 @@ export default function BordadoColoridoPage() {
                 return;
             }
 
-            setResultImg(data.imageUrl);
+            await handleImagemGerada(data.imageUrl);
         } catch (err: any) {
             console.error(err);
             setErrorMsg('Falha na comunicação com o servidor. O crédito não foi descontado.');
@@ -399,12 +463,12 @@ export default function BordadoColoridoPage() {
                                         <div className="inline-flex w-5 h-5 rounded-full border-2 border-primary items-center justify-center text-primary text-[10px] font-bold align-middle mr-1">O</div> Formato do bastidor <span className="text-primary text-sm ml-1">*</span>
                                     </label>
                                     <div className="flex flex-wrap gap-2">
-                                        {[
+                                        {([] as { id: 'redondo' | 'quadrado' | 'retangular' | 'sem_bastidor', label: string }[]).concat([
                                             { id: 'redondo', label: '⭕ Redondo' },
                                             { id: 'quadrado', label: '⬜ Quadrado' },
                                             { id: 'retangular', label: '📄 Retangular' },
                                             { id: 'sem_bastidor', label: '🔷 Sem bastidor' }
-                                        ].map(f => (
+                                        ]).map(f => (
                                             <button
                                                 key={f.id}
                                                 onClick={() => setFormato(f.id)}
@@ -490,13 +554,56 @@ export default function BordadoColoridoPage() {
                                 <h2 className="font-display text-2xl text-text mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Tecendo sua arte...</h2>
                                 <p className="font-ui text-text-light max-w-sm">Processando as instruções na nossa IA. Buscando a cartela de cores e simulando as texturas perfeitas.</p>
                             </div>
-                        ) : resultImg ? (
+                        ) : imagemOriginal ? (
                             <div className="bg-surface rounded-3xl border border-border-light shadow-lg flex flex-col md:flex-row overflow-hidden">
-                                <div className="md:w-1/2 bg-surface-warm/50 p-8 flex items-center justify-center border-r border-border-light">
-                                    <div className="relative rounded-full border-[10px] border-[#DEB887] shadow-xl w-48 h-48 md:w-64 md:h-64 overflow-hidden bg-white">
-                                        <img src={resultImg} alt="Preview" className="w-full h-full object-cover" />
-                                        <div className="absolute inset-0 shadow-inner rounded-full pointer-events-none" />
-                                    </div>
+                                <div className="md:w-1/2 bg-surface-warm/50 p-6 flex flex-col items-center justify-center border-r border-border-light relative">
+                                    {processandoPreview && (
+                                        <div style={{
+                                          position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.85)',
+                                          display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                          justifyContent: 'center', zIndex: 10, gap: '12px'
+                                        }}>
+                                          <div style={{ width: '36px', height: '36px', border: '3px solid #F2E9DB',
+                                            borderTopColor: '#AC5148', borderRadius: '50%',
+                                            animation: 'spin 0.8s linear infinite' }} />
+                                          <p style={{ fontSize: '13px', color: '#7A6A5A', fontWeight: 600, margin: 0 }}>
+                                            {removerMolduraAtivo ? 'Removendo bastidor...' : 'Processando...'}
+                                          </p>
+                                        </div>
+                                    )}
+
+                                    {imagemPreview && (
+                                        <div className={`relative ${removerMolduraAtivo ? 'rounded-2xl w-full h-full p-4' : 'rounded-full border-[10px] border-[#DEB887] w-48 h-48 md:w-64 md:h-64'} shadow-xl overflow-hidden bg-white transition-all duration-300 flex items-center justify-center`}>
+                                            {/* Fundo xadrez indica transparência quando moldura removida */}
+                                            {removerMolduraAtivo && (
+                                              <div style={{
+                                                position: 'absolute', inset: '16px', borderRadius: '12px',
+                                                backgroundImage: `
+                                                  linear-gradient(45deg, #f0f0f0 25%, transparent 25%),
+                                                  linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
+                                                  linear-gradient(45deg, transparent 75%, #f0f0f0 75%),
+                                                  linear-gradient(-45deg, transparent 75%, #f0f0f0 75%)
+                                                `,
+                                                backgroundSize: '12px 12px',
+                                                backgroundPosition: '0 0, 0 6px, 6px -6px, -6px 0px',
+                                                opacity: 1
+                                              }} />
+                                            )}
+                                            
+                                            <img src={imagemPreview} alt="Preview" className={`relative z-10 ${removerMolduraAtivo ? 'max-w-[320px] max-h-[320px] object-contain rounded-12px' : 'w-full h-full object-cover'} ${processandoPreview ? 'opacity-50' : 'opacity-100'} transition-opacity`} />
+                                            {!removerMolduraAtivo && <div className="absolute inset-0 shadow-inner rounded-full pointer-events-none z-20" />}
+                                            
+                                            <div style={{
+                                              position: 'absolute', bottom: removerMolduraAtivo ? '16px' : '24px', right: removerMolduraAtivo ? '16px' : '50%', transform: removerMolduraAtivo ? 'none' : 'translateX(50%)', zIndex: 30,
+                                              background: 'rgba(28,20,16,0.75)', color: 'white',
+                                              padding: '4px 10px', borderRadius: '999px',
+                                              fontSize: '12px', fontWeight: 700,
+                                              backdropFilter: 'blur(4px)'
+                                            }}>
+                                              {tamanhoEfetivo}cm × {tamanhoEfetivo}cm · A4
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="md:w-1/2 p-8 flex flex-col justify-center bg-white space-y-6">
                                     <div>
@@ -509,43 +616,101 @@ export default function BordadoColoridoPage() {
                                             {/* Seletor de tamanho */}
                                             <div>
                                                 <label style={{ fontWeight: 700, fontSize: '13px', color: '#1A1A1A', display: 'block', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                                    📐 Tamanho do risco no PDF
+                                                    📐 Tamanho no PDF (folha A4)
                                                 </label>
-                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
-                                                    {([13, 16, 20, 22] as const).map(cm => (
+                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                                                    {([
+                                                        { cm: 13, desc: 'Bastidor P' },
+                                                        { cm: 16, desc: 'Bastidor M' },
+                                                        { cm: 20, desc: 'Bastidor G' },
+                                                    ] as const).map(({ cm, desc }) => (
                                                         <button
                                                             key={cm}
-                                                            onClick={() => setTamanhoRisco(cm)}
+                                                            onClick={() => handleTamanhoChange(cm)}
                                                             style={{
                                                                 padding: '12px 8px', borderRadius: '12px', textAlign: 'center',
-                                                                border: `2px solid ${tamanhoRisco === cm ? '#AC5148' : '#E5D9CC'}`,
-                                                                background: tamanhoRisco === cm ? '#FDF0EE' : 'white',
+                                                                border: `2px solid ${tamanhoRisco === cm && !usandoPersonalizado ? '#AC5148' : '#E5D9CC'}`,
+                                                                background: tamanhoRisco === cm && !usandoPersonalizado ? '#FDF0EE' : 'white',
                                                                 cursor: 'pointer', transition: 'all 0.2s ease'
                                                             }}
                                                         >
-                                                            <div style={{ fontWeight: 800, fontSize: '18px', color: tamanhoRisco === cm ? '#AC5148' : '#1A1A1A' }}>
+                                                            <div style={{ fontWeight: 800, fontSize: '20px', color: tamanhoRisco === cm && !usandoPersonalizado ? '#AC5148' : '#1A1A1A' }}>
                                                                 {cm}cm
                                                             </div>
-                                                            <div style={{ fontSize: '10px', color: '#AAAAAA', marginTop: '2px' }}>
-                                                                {{13: 'Bastidor P', 16: 'Bastidor M', 20: 'Bastidor G', 22: 'Bastidor GG'}[cm]}
+                                                            <div style={{ fontSize: '11px', color: tamanhoRisco === cm && !usandoPersonalizado ? '#AC5148' : '#AAAAAA', marginTop: '2px' }}>
+                                                                {desc}
                                                             </div>
                                                         </button>
                                                     ))}
                                                 </div>
-                                                <p style={{ fontSize: '12px', color: '#7A6A5A', margin: '8px 0 0', textAlign: 'center' }}>
-                                                    Centralizado em folha A4 · Imprimir em 100% (tamanho real)
-                                                </p>
                                             </div>
 
+                                            {/* Divisor */}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' }}>
+                                              <div style={{ flex: 1, height: '1px', background: '#E5D9CC' }} />
+                                              <span style={{ fontSize: '11px', color: '#AAAAAA', fontWeight: 600 }}>ou</span>
+                                              <div style={{ flex: 1, height: '1px', background: '#E5D9CC' }} />
+                                            </div>
+
+                                            {/* Campo personalizado */}
+                                            <div style={{
+                                              display: 'flex', alignItems: 'center', gap: '10px',
+                                              padding: '12px 14px', borderRadius: '12px',
+                                              border: `2px solid ${usandoPersonalizado && tamanhoPersonalizadoValido ? '#AC5148' : '#E5D9CC'}`,
+                                              background: usandoPersonalizado ? '#FDF0EE' : 'white',
+                                              transition: 'all 0.2s ease'
+                                            }}>
+                                              <span style={{ fontSize: '16px' }}>✏️</span>
+                                              <div style={{ flex: 1 }}>
+                                                <p style={{ margin: 0, fontWeight: 700, fontSize: '13px', color: '#1A1A1A' }}>
+                                                  Tamanho personalizado
+                                                </p>
+                                                <p style={{ margin: 0, fontSize: '11px', color: '#7A6A5A' }}>
+                                                  Entre 5cm e 20cm
+                                                </p>
+                                              </div>
+                                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <input
+                                                  type="number"
+                                                  min={5}
+                                                  max={20}
+                                                  step={0.5}
+                                                  value={tamanhoPersonalizado}
+                                                  onChange={e => {
+                                                    setTamanhoPersonalizado(e.target.value)
+                                                    setUsandoPersonalizado(true)
+                                                  }}
+                                                  onFocus={() => setUsandoPersonalizado(true)}
+                                                  placeholder="Ex: 15"
+                                                  style={{
+                                                    width: '72px', padding: '8px 10px', borderRadius: '8px',
+                                                    border: `1px solid ${tamanhoPersonalizadoValido && usandoPersonalizado ? '#AC5148' : '#E5D9CC'}`,
+                                                    fontFamily: 'Nunito', fontWeight: 800, fontSize: '16px',
+                                                    textAlign: 'center', color: '#1A1A1A',
+                                                    background: 'white', outline: 'none'
+                                                  }}
+                                                />
+                                                <span style={{ fontWeight: 700, fontSize: '14px', color: '#7A6A5A' }}>cm</span>
+                                              </div>
+                                            </div>
+
+                                            {/* Erro se fora do limite */}
+                                            {usandoPersonalizado && tamanhoPersonalizado && !tamanhoPersonalizadoValido && (
+                                              <p style={{ color: '#DC2626', fontSize: '12px', margin: '-8px 0 0', fontWeight: 600 }}>
+                                                ⚠️ O tamanho deve ser entre 5cm e 20cm para caber no A4.
+                                              </p>
+                                            )}
+
                                             {/* Toggle remover moldura */}
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: '#FAFAFA', borderRadius: '12px', border: '1px solid #E5D9CC', opacity: formato === 'sem_bastidor' ? 0.5 : 1 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: '#FAFAFA', borderRadius: '12px', border: `1px solid ${removerMolduraAtivo ? '#AC5148' : '#E5D9CC'}`, cursor: 'pointer', transition: 'border-color 0.3s ease', opacity: formato === 'sem_bastidor' ? 0.5 : 1 }}
+                                                onClick={() => { if(formato !== 'sem_bastidor') handleToggleMoldura(!removerMolduraAtivo); }}
+                                            >
                                                 <div>
-                                                    <p style={{ margin: 0, fontWeight: 700, fontSize: '14px', color: '#1A1A1A' }}>Remover moldura</p>
-                                                    <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#7A6A5A' }}>Baixa somente o desenho, sem o círculo/quadrado</p>
+                                                    <p style={{ margin: 0, fontWeight: 700, fontSize: '14px', color: '#1A1A1A' }}>Remover bastidor (fundo)</p>
+                                                    <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#7A6A5A' }}>{removerMolduraAtivo ? 'Fundo removido' : 'Remove o tecido em volta para PDF'}</p>
                                                 </div>
                                                 <div
-                                                    onClick={() => { if(formato !== 'sem_bastidor') setRemoverMolduraAtivo(prev => !prev); }}
-                                                    style={{ width: '48px', height: '26px', borderRadius: '999px', cursor: formato === 'sem_bastidor' ? 'not-allowed' : 'pointer', background: removerMolduraAtivo ? '#AC5148' : '#E5D9CC', position: 'relative', transition: 'background 0.3s ease', flexShrink: 0 }}
+                                                    style={{ width: '48px', height: '26px', borderRadius: '999px', background: removerMolduraAtivo ? '#AC5148' : '#E5D9CC', position: 'relative', transition: 'background 0.3s ease', flexShrink: 0 }}
                                                 >
                                                     <div style={{ position: 'absolute', top: '3px', left: removerMolduraAtivo ? '25px' : '3px', width: '20px', height: '20px', borderRadius: '50%', background: 'white', transition: 'left 0.3s ease', boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }} />
                                                 </div>
@@ -563,18 +728,18 @@ export default function BordadoColoridoPage() {
                                             <div style={{ display: 'flex', gap: '10px', flexDirection: 'column' }}>
                                                 <div className="flex gap-2">
                                                     <button
-                                                        onClick={() => { setStep(1); setResultImg(null); setDescricao(''); setReferenceImageBase64(null); setImagePreviewUrl(null); setRemoverMolduraAtivo(false); }}
-                                                        style={{ flex: 1, padding: '13px', borderRadius: '12px', background: 'white', border: '1px solid #E5D9CC', fontWeight: 700, fontSize: '14px', color: '#AC5148', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                        onClick={handleGerarNovamente}
+                                                        disabled={gerandoPDF}
+                                                        style={{ flex: 1, padding: '13px', borderRadius: '12px', background: 'white', border: '1px solid #E5D9CC', fontWeight: 700, fontSize: '14px', color: '#AC5148', cursor: gerandoPDF ? 'not-allowed' : 'pointer', transition: 'all 0.2s ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                                     >
-                                                        Novo
+                                                        🔄 Criar Novo
                                                     </button>
                                                     <button
                                                         onClick={async () => {
-                                                            if (!resultImg) return;
                                                             setGerandoPDF(true);
                                                             try {
-                                                                await gerarPDFRisco(resultImg, {
-                                                                    tamanho: tamanhoRisco,
+                                                                await gerarPDFRisco(imagemPreview!, {
+                                                                    tamanho: tamanhoEfetivo,
                                                                     removerMoldura: removerMolduraAtivo,
                                                                     nomeArquivo: 'bordado'
                                                                 });
@@ -586,17 +751,17 @@ export default function BordadoColoridoPage() {
                                                                 setGerandoPDF(false);
                                                             }
                                                         }}
-                                                        disabled={gerandoPDF}
-                                                        style={{ flex: 2, padding: '13px', borderRadius: '12px', background: gerandoPDF ? '#E5D9CC' : '#AC5148', color: gerandoPDF ? '#AAAAAA' : 'white', border: 'none', fontWeight: 700, fontSize: '14px', cursor: gerandoPDF ? 'not-allowed' : 'pointer', boxShadow: gerandoPDF ? 'none' : '0 4px 16px rgba(172,81,72,0.3)', transition: 'all 0.2s ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                        disabled={gerandoPDF || processandoPreview || (usandoPersonalizado && !tamanhoPersonalizadoValido)}
+                                                        style={{ flex: 2, padding: '13px', borderRadius: '12px', background: gerandoPDF || processandoPreview || (usandoPersonalizado && !tamanhoPersonalizadoValido) ? '#E5D9CC' : '#AC5148', color: gerandoPDF || processandoPreview || (usandoPersonalizado && !tamanhoPersonalizadoValido) ? '#AAAAAA' : 'white', border: 'none', fontWeight: 700, fontSize: '14px', cursor: gerandoPDF || processandoPreview || (usandoPersonalizado && !tamanhoPersonalizadoValido) ? 'not-allowed' : 'pointer', boxShadow: gerandoPDF || processandoPreview ? 'none' : '0 4px 16px rgba(172,81,72,0.3)', transition: 'all 0.2s ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                                     >
                                                         <div className="mx-auto flex gap-2">
-                                                            {gerandoPDF ? '⏳ Preparando...' : `📄 Baixar PDF ${tamanhoRisco}cm`}
+                                                            {gerandoPDF ? '⏳ Preparando...' : `📄 Baixar PDF ${tamanhoEfetivo}cm`}
                                                         </div>
                                                     </button>
                                                 </div>
                                                 <Button variant="ghost" className="text-text-light hover:text-text rounded-full mt-2 w-full text-sm" onClick={async () => {
-                                                    if (!resultImg) return;
-                                                    const response = await fetch(resultImg);
+                                                    if (!imagemOriginal) return;
+                                                    const response = await fetch(imagemOriginal);
                                                     const blob = await response.blob();
                                                     const url = URL.createObjectURL(blob);
                                                     const a = document.createElement('a');
@@ -605,7 +770,7 @@ export default function BordadoColoridoPage() {
                                                     a.click();
                                                     URL.revokeObjectURL(url);
                                                 }}>
-                                                    Baixar apenas a imagem (PNG) <Download className="w-4 h-4 ml-2" />
+                                                    Baixar imagem bruta (PNG) <Download className="w-4 h-4 ml-2" />
                                                 </Button>
                                             </div>
                                         </div>

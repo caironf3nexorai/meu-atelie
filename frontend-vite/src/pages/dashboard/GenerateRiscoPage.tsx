@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { gerarPDFRisco } from '@/utils/gerarPDFRisco';
+import { removerFundoBranco, removerMoldura, cortarAoBastidor } from '@/utils/removerFundo';
 import { UploadCloud, X, ArrowRight, Wand2, Download, RefreshCw, Scissors, Image as ImageIcon, AlertCircle, Loader2, ChevronDown, Smile } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -19,20 +20,83 @@ export default function RiscoPage() {
     const [keepText, setKeepText] = useState(false);
     const [isFaceless, setIsFaceless] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
-    const [resultImg, setResultImg] = useState<string | null>(null);
+    const [formato, setFormato] = useState<'redondo' | 'quadrado' | 'retangular' | 'sem_bastidor'>('sem_bastidor');
+    
+    // PDF Download States - Lógica de preview ao vivo
+    const [imagemOriginal, setImagemOriginal] = useState<string | null>(null);
+    const [imagemPreview, setImagemPreview] = useState<string | null>(null);
+    const [processandoPreview, setProcessandoPreview] = useState(false);
+    const [tamanhoRisco, setTamanhoRisco] = useState<13|16|20>(16);
+    const [removerMolduraAtivo, setRemoverMolduraAtivo] = useState(false);
+    const [gerandoPDF, setGerandoPDF] = useState(false);
+    const [tamanhoPersonalizado, setTamanhoPersonalizado] = useState<string>('');
+    const [usandoPersonalizado, setUsandoPersonalizado] = useState(false);
+    
+    const tamanhoEfetivo = usandoPersonalizado && Number(tamanhoPersonalizado) > 0 ? Number(tamanhoPersonalizado) : tamanhoRisco;
+    const tamanhoPersonalizadoValido = Number(tamanhoPersonalizado) >= 5 && Number(tamanhoPersonalizado) <= 20;
     const [generationId, setGenerationId] = useState<string | null>(null);
     const [errorMsg, setErrorMsg] = useState('');
     const [showUpgrade, setShowUpgrade] = useState(false);
     const [imageExpiresAt, setImageExpiresAt] = useState<string | null>(null);
     const [timeLeft, setTimeLeft] = useState<string>('');
-    const [formato, setFormato] = useState<'redondo' | 'quadrado' | 'retangular' | 'sem_bastidor'>('sem_bastidor');
-    const [tamanhoRisco, setTamanhoRisco] = useState<13|16|20|22>(16);
-    const [removerMolduraAtivo, setRemoverMolduraAtivo] = useState(false);
-    const [gerandoPDF, setGerandoPDF] = useState(false);
+
     // Dicas colapsáveis
     const [dicasRiscoAbertas, setDicasRiscoAbertas] = useState(() => {
         return localStorage.getItem('dicas-risco-fechadas') !== 'true';
     });
+
+    const atualizarPreview = async (url: string = imagemOriginal!, devRemover: boolean = removerMolduraAtivo) => {
+        if (!url) return;
+        setProcessandoPreview(true);
+        try {
+            let imagemProcessada = url;
+            if (devRemover) {
+                imagemProcessada = await removerMoldura(url, formato);
+            }
+            const imagemFinal = await removerFundoBranco(imagemProcessada);
+            setImagemPreview(imagemFinal);
+        } catch (err) {
+            console.error('Erro ao processar preview:', err);
+            setImagemPreview(url);
+        } finally {
+            setProcessandoPreview(false);
+        }
+    };
+
+    const handleImagemGerada = async (url: string) => {
+        setProcessandoPreview(true);
+        try {
+            const urlRecortada = await cortarAoBastidor(url);
+            setImagemOriginal(urlRecortada);
+            await atualizarPreview(urlRecortada, false);
+        } catch (err) {
+            console.error('Erro no AutoCrop do Bastidor:', err);
+            setImagemOriginal(url);
+            await atualizarPreview(url, false);
+        }
+    };
+
+    const handleToggleMoldura = async (valor: boolean) => {
+        setRemoverMolduraAtivo(valor);
+        await atualizarPreview(imagemOriginal!, valor);
+    };
+
+    const handleTamanhoChange = (cm: 13 | 16 | 20) => {
+        setTamanhoRisco(cm);
+        setUsandoPersonalizado(false);
+        setTamanhoPersonalizado('');
+    };
+
+    const handleGerarNovamente = () => {
+        setImagemOriginal(null);
+        setImagemPreview(null);
+        setRemoverMolduraAtivo(false);
+        setTamanhoRisco(16);
+        setUsandoPersonalizado(false);
+        setStep(1);
+        removeFile();
+        setDescricao('');
+    };
 
     const toggleDicasRisco = () => {
         const novoEstado = !dicasRiscoAbertas;
@@ -190,7 +254,7 @@ export default function RiscoPage() {
                 return;
             }
 
-            setResultImg(data.imageUrl);
+            await handleImagemGerada(data.imageUrl);
             setImageExpiresAt(data.imageExpiresAt);
             setGenerationId(data.generationId);
         } catch (err: any) {
@@ -220,8 +284,8 @@ export default function RiscoPage() {
     }, [imageExpiresAt]);
 
     const handleDownload = async () => {
-        if (!resultImg) return;
-        const response = await fetch(resultImg);
+        if (!imagemOriginal) return;
+        const response = await fetch(imagemOriginal);
         const blob = await response.blob();
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -538,8 +602,88 @@ export default function RiscoPage() {
                             <div className="grid md:grid-cols-2 gap-8">
                                 <div className="bg-surface rounded-3xl p-4 sm:p-8 border border-border-light shadow-sm flex flex-col items-center text-center">
                                     <h2 className="font-display text-2xl text-text mb-6">Prontinho!</h2>
-                                    <div className="relative rounded-2xl overflow-hidden shadow-md mb-6 bg-surface-warm p-2 border border-border w-full">
-                                        {resultImg && <img src={resultImg} alt="Risco Gerado" className="w-full h-auto rounded-xl object-contain bg-white" />}
+                                    <div style={{
+                                      position: 'relative',
+                                      minHeight: '300px',
+                                      background: '#FAFAFA',
+                                      borderRadius: '16px',
+                                      border: '1px solid #E5D9CC',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      overflow: 'hidden',
+                                      marginBottom: '24px',
+                                      width: '100%'
+                                    }}>
+                                      {/* Loading processamento */}
+                                      {processandoPreview && (
+                                        <div style={{
+                                          position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.85)',
+                                          display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                          justifyContent: 'center', zIndex: 10, gap: '12px'
+                                        }}>
+                                          <div style={{ width: '36px', height: '36px', border: '3px solid #F2E9DB',
+                                            borderTopColor: '#AC5148', borderRadius: '50%',
+                                            animation: 'spin 0.8s linear infinite' }} />
+                                          <p style={{ fontSize: '13px', color: '#7A6A5A', fontWeight: 600, margin: 0 }}>
+                                            {removerMolduraAtivo ? 'Removendo moldura...' : 'Processando...'}
+                                          </p>
+                                        </div>
+                                      )}
+
+                                      {/* Imagem processada — fundo xadrez para mostrar transparência */}
+                                      {imagemPreview && (
+                                        <div style={{ position: 'relative', padding: '16px', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                          {/* Fundo xadrez indica transparência */}
+                                          <div style={{
+                                            position: 'absolute', inset: '16px', borderRadius: '12px',
+                                            backgroundImage: `
+                                              linear-gradient(45deg, #f0f0f0 25%, transparent 25%),
+                                              linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
+                                              linear-gradient(45deg, transparent 75%, #f0f0f0 75%),
+                                              linear-gradient(-45deg, transparent 75%, #f0f0f0 75%)
+                                            `,
+                                            backgroundSize: '12px 12px',
+                                            backgroundPosition: '0 0, 0 6px, 6px -6px, -6px 0px',
+                                            opacity: removerMolduraAtivo ? 1 : 0.4,
+                                            transition: 'opacity 0.3s ease'
+                                          }} />
+
+                                          <img
+                                            src={imagemPreview}
+                                            alt="Preview do risco"
+                                            style={{
+                                              position: 'relative', zIndex: 1,
+                                              maxWidth: '320px', maxHeight: '320px',
+                                              width: '100%', objectFit: 'contain',
+                                              borderRadius: '12px',
+                                              transition: 'opacity 0.3s ease',
+                                              opacity: processandoPreview ? 0.5 : 1
+                                            }}
+                                          />
+
+                                          {/* Indicador de tamanho sobre a imagem */}
+                                          <div style={{
+                                            position: 'absolute', bottom: '24px', right: '24px', zIndex: 2,
+                                            background: 'rgba(28,20,16,0.75)', color: 'white',
+                                            padding: '4px 10px', borderRadius: '999px',
+                                            fontSize: '12px', fontWeight: 700,
+                                            backdropFilter: 'blur(4px)'
+                                          }}>
+                                            {tamanhoEfetivo}cm × {tamanhoEfetivo}cm · A4
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {/* Placeholder */}
+                                      {!imagemPreview && !processandoPreview && (
+                                        <div style={{ textAlign: 'center', padding: '40px' }}>
+                                          <span style={{ fontSize: '48px' }}>🧵</span>
+                                          <p style={{ color: '#7A6A5A', fontSize: '14px', margin: '12px 0 0', fontWeight: 600 }}>
+                                            Descreva e gere seu risco
+                                          </p>
+                                        </div>
+                                      )}
                                     </div>
                                     <div className="bg-warn/10 text-warn border border-warn/20 rounded-lg px-4 py-2 font-ui text-sm flex items-center justify-center w-full mb-6">
                                         <span className="relative flex h-2 w-2 mr-2">
@@ -551,95 +695,193 @@ export default function RiscoPage() {
                                 </div>
 
                                 <div className="flex flex-col gap-4 justify-center w-full">
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                        {/* Seletor de tamanho */}
+                                    {imagemPreview && (
+                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+
+                                        {/* Tamanhos — apenas 13, 16 e 20 */}
                                         <div>
-                                            <label style={{ fontWeight: 700, fontSize: '13px', color: '#1A1A1A', display: 'block', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                                📐 Tamanho do risco no PDF
-                                            </label>
-                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
-                                                {([13, 16, 20, 22] as const).map(cm => (
-                                                    <button
-                                                        key={cm}
-                                                        onClick={() => setTamanhoRisco(cm)}
-                                                        style={{
-                                                            padding: '12px 8px', borderRadius: '12px', textAlign: 'center',
-                                                            border: `2px solid ${tamanhoRisco === cm ? '#AC5148' : '#E5D9CC'}`,
-                                                            background: tamanhoRisco === cm ? '#FDF0EE' : 'white',
-                                                            cursor: 'pointer', transition: 'all 0.2s ease'
-                                                        }}
-                                                    >
-                                                        <div style={{ fontWeight: 800, fontSize: '18px', color: tamanhoRisco === cm ? '#AC5148' : '#1A1A1A' }}>
-                                                            {cm}cm
-                                                        </div>
-                                                        <div style={{ fontSize: '10px', color: '#AAAAAA', marginTop: '2px' }}>
-                                                            {{13: 'Bastidor P', 16: 'Bastidor M', 20: 'Bastidor G', 22: 'Bastidor GG'}[cm]}
-                                                        </div>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                            <p style={{ fontSize: '12px', color: '#7A6A5A', margin: '8px 0 0', textAlign: 'center' }}>
-                                                Centralizado em folha A4 · Imprimir em 100% (tamanho real)
-                                            </p>
+                                          <label style={{ fontWeight: 700, fontSize: '13px', color: '#1A1A1A',
+                                            display: 'block', marginBottom: '10px', textTransform: 'uppercase',
+                                            letterSpacing: '0.5px' }}>
+                                            📐 Tamanho no PDF (folha A4)
+                                          </label>
+                                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                                            {([
+                                              { cm: 13, desc: 'Bastidor P' },
+                                              { cm: 16, desc: 'Bastidor M' },
+                                              { cm: 20, desc: 'Bastidor G' },
+                                            ] as const).map(({ cm, desc }) => (
+                                              <button
+                                                key={cm}
+                                                onClick={() => handleTamanhoChange(cm)}
+                                                style={{
+                                                  padding: '12px 8px', borderRadius: '12px', textAlign: 'center',
+                                                  border: `2px solid ${tamanhoRisco === cm && !usandoPersonalizado ? '#AC5148' : '#E5D9CC'}`,
+                                                  background: tamanhoRisco === cm && !usandoPersonalizado ? '#FDF0EE' : 'white',
+                                                  cursor: 'pointer', transition: 'all 0.2s ease'
+                                                }}
+                                              >
+                                                <div style={{ fontWeight: 800, fontSize: '20px',
+                                                  color: tamanhoRisco === cm && !usandoPersonalizado ? '#AC5148' : '#1A1A1A' }}>
+                                                  {cm}cm
+                                                </div>
+                                                <div style={{ fontSize: '11px', color: tamanhoRisco === cm && !usandoPersonalizado ? '#AC5148' : '#AAAAAA',
+                                                  marginTop: '2px' }}>
+                                                  {desc}
+                                                </div>
+                                              </button>
+                                            ))}
+                                          </div>
                                         </div>
+
+                                        {/* Divisor */}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' }}>
+                                          <div style={{ flex: 1, height: '1px', background: '#E5D9CC' }} />
+                                          <span style={{ fontSize: '11px', color: '#AAAAAA', fontWeight: 600 }}>ou</span>
+                                          <div style={{ flex: 1, height: '1px', background: '#E5D9CC' }} />
+                                        </div>
+
+                                        {/* Campo personalizado */}
+                                        <div style={{
+                                          display: 'flex', alignItems: 'center', gap: '10px',
+                                          padding: '12px 14px', borderRadius: '12px',
+                                          border: `2px solid ${usandoPersonalizado && tamanhoPersonalizadoValido ? '#AC5148' : '#E5D9CC'}`,
+                                          background: usandoPersonalizado ? '#FDF0EE' : 'white',
+                                          transition: 'all 0.2s ease'
+                                        }}>
+                                          <span style={{ fontSize: '16px' }}>✏️</span>
+                                          <div style={{ flex: 1 }}>
+                                            <p style={{ margin: 0, fontWeight: 700, fontSize: '13px', color: '#1A1A1A' }}>
+                                              Tamanho personalizado
+                                            </p>
+                                            <p style={{ margin: 0, fontSize: '11px', color: '#7A6A5A' }}>
+                                              Entre 5cm e 20cm (limite do A4)
+                                            </p>
+                                          </div>
+                                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <input
+                                              type="number"
+                                              min={5}
+                                              max={20}
+                                              step={0.5}
+                                              value={tamanhoPersonalizado}
+                                              onChange={e => {
+                                                setTamanhoPersonalizado(e.target.value)
+                                                setUsandoPersonalizado(true)
+                                              }}
+                                              onFocus={() => setUsandoPersonalizado(true)}
+                                              placeholder="Ex: 15"
+                                              style={{
+                                                width: '72px', padding: '8px 10px', borderRadius: '8px',
+                                                border: `1px solid ${tamanhoPersonalizadoValido && usandoPersonalizado ? '#AC5148' : '#E5D9CC'}`,
+                                                fontFamily: 'Nunito', fontWeight: 800, fontSize: '16px',
+                                                textAlign: 'center', color: '#1A1A1A',
+                                                background: 'white', outline: 'none'
+                                              }}
+                                            />
+                                            <span style={{ fontWeight: 700, fontSize: '14px', color: '#7A6A5A' }}>cm</span>
+                                          </div>
+                                        </div>
+
+                                        {/* Erro se fora do limite */}
+                                        {usandoPersonalizado && tamanhoPersonalizado && !tamanhoPersonalizadoValido && (
+                                          <p style={{ color: '#DC2626', fontSize: '12px', margin: '-8px 0 0', fontWeight: 600 }}>
+                                            ⚠️ O tamanho deve ser entre 5cm e 20cm para caber no A4.
+                                          </p>
+                                        )}
 
                                         {/* Toggle remover moldura */}
-                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: '#FAFAFA', borderRadius: '12px', border: '1px solid #E5D9CC', opacity: formato === 'sem_bastidor' ? 0.5 : 1 }}>
-                                            <div>
-                                                <p style={{ margin: 0, fontWeight: 700, fontSize: '14px', color: '#1A1A1A' }}>Remover moldura</p>
-                                                <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#7A6A5A' }}>Baixa somente o desenho, sem o círculo/quadrado</p>
-                                            </div>
-                                            <div
-                                                onClick={() => { if(formato !== 'sem_bastidor') setRemoverMolduraAtivo(prev => !prev); }}
-                                                style={{ width: '48px', height: '26px', borderRadius: '999px', cursor: formato === 'sem_bastidor' ? 'not-allowed' : 'pointer', background: removerMolduraAtivo ? '#AC5148' : '#E5D9CC', position: 'relative', transition: 'background 0.3s ease', flexShrink: 0 }}
-                                            >
-                                                <div style={{ position: 'absolute', top: '3px', left: removerMolduraAtivo ? '25px' : '3px', width: '20px', height: '20px', borderRadius: '50%', background: 'white', transition: 'left 0.3s ease', boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }} />
-                                            </div>
+                                        <div style={{
+                                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                          padding: '14px 16px', background: '#FAFAFA', borderRadius: '12px',
+                                          border: `1px solid ${removerMolduraAtivo ? '#AC5148' : '#E5D9CC'}`,
+                                          transition: 'border-color 0.3s ease', cursor: 'pointer',
+                                          opacity: formato === 'sem_bastidor' ? 0.5 : 1
+                                        }}
+                                        onClick={() => { if(formato !== 'sem_bastidor') handleToggleMoldura(!removerMolduraAtivo); }}>
+                                          <div>
+                                            <p style={{ margin: 0, fontWeight: 700, fontSize: '14px', color: '#1A1A1A' }}>
+                                              Remover moldura
+                                            </p>
+                                            <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#7A6A5A' }}>
+                                              {removerMolduraAtivo
+                                                ? 'Moldura removida — somente o desenho'
+                                                : 'Ativar para baixar somente o risco sem círculo'}
+                                            </p>
+                                          </div>
+                                          {/* Toggle switch */}
+                                          <div style={{
+                                            width: '48px', height: '26px', borderRadius: '999px',
+                                            background: removerMolduraAtivo ? '#AC5148' : '#E5D9CC',
+                                            position: 'relative', transition: 'background 0.3s ease', flexShrink: 0
+                                          }}>
+                                            <div style={{
+                                              position: 'absolute', top: '3px',
+                                              left: removerMolduraAtivo ? '25px' : '3px',
+                                              width: '20px', height: '20px', borderRadius: '50%',
+                                              background: 'white', transition: 'left 0.3s ease',
+                                              boxShadow: '0 1px 4px rgba(0,0,0,0.2)'
+                                            }} />
+                                          </div>
                                         </div>
 
-                                        {/* Aviso sobre impressão */}
-                                        <div style={{ background: '#FDF8F0', borderRadius: '10px', padding: '10px 14px', border: '1px solid #E5D9CC', display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
-                                            <span style={{ fontSize: '16px', flexShrink: 0 }}>⚠️</span>
-                                            <p style={{ margin: 0, fontSize: '12px', color: '#7A6A5A', lineHeight: 1.5 }}>
-                                                Ao imprimir, selecione <strong>"Tamanho real"</strong> ou <strong>"100%"</strong>. Nunca use "Ajustar à página".
-                                            </p>
+                                        {/* Aviso impressão */}
+                                        <div style={{ background: '#FDF8F0', borderRadius: '10px',
+                                          padding: '10px 14px', border: '1px solid #E5D9CC',
+                                          display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                                          <span style={{ fontSize: '16px', flexShrink: 0 }}>⚠️</span>
+                                          <p style={{ margin: 0, fontSize: '12px', color: '#7A6A5A', lineHeight: 1.5 }}>
+                                            Ao imprimir, selecione <strong>"Tamanho real"</strong> ou <strong>"100%"</strong>.
+                                            Nunca use "Ajustar à página".
+                                          </p>
                                         </div>
 
                                         {/* Botões */}
                                         <div style={{ display: 'flex', gap: '10px' }}>
-                                            <button
-                                                onClick={() => { setStep(1); setResultImg(null); removeFile(); setDescricao(''); setRemoverMolduraAtivo(false); }}
-                                                style={{ flex: 1, padding: '13px', borderRadius: '12px', background: 'white', border: '1px solid #E5D9CC', fontWeight: 700, fontSize: '14px', color: '#AC5148', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                            >
-                                                Novo
-                                            </button>
-                                            <button
-                                                onClick={async () => {
-                                                    if (!resultImg) return;
-                                                    setGerandoPDF(true);
-                                                    try {
-                                                        await gerarPDFRisco(resultImg, {
-                                                            tamanho: tamanhoRisco,
-                                                            removerMoldura: removerMolduraAtivo,
-                                                            nomeArquivo: 'risco'
-                                                        });
-                                                        showAlert('Sucesso!', 'PDF Gerado com sucesso!');
-                                                    } catch (err) {
-                                                        console.error(err);
-                                                        showAlert('Erro', 'Erro ao gerar PDF. Tente novamente.');
-                                                    } finally {
-                                                        setGerandoPDF(false);
-                                                    }
-                                                }}
-                                                disabled={gerandoPDF}
-                                                style={{ flex: 2, padding: '13px', borderRadius: '12px', background: gerandoPDF ? '#E5D9CC' : '#AC5148', color: gerandoPDF ? '#AAAAAA' : 'white', border: 'none', fontWeight: 700, fontSize: '14px', cursor: gerandoPDF ? 'not-allowed' : 'pointer', boxShadow: gerandoPDF ? 'none' : '0 4px 16px rgba(172,81,72,0.3)', transition: 'all 0.2s ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                            >
-                                                <div className="mx-auto flex gap-2">
-                                                    {gerandoPDF ? '⏳ Preparando...' : `📄 Baixar PDF ${tamanhoRisco}cm`}
-                                                </div>
-                                            </button>
+                                          <button
+                                            onClick={handleGerarNovamente}
+                                            disabled={gerandoPDF}
+                                            style={{ flex: 1, padding: '13px', borderRadius: '12px',
+                                              background: 'white', border: '1px solid #E5D9CC',
+                                              fontWeight: 700, fontSize: '14px', color: '#AC5148',
+                                              cursor: gerandoPDF ? 'not-allowed' : 'pointer', transition: 'all 0.2s ease' }}
+                                          >
+                                            🔄 Criar Novo
+                                          </button>
+                                          <button
+                                            onClick={async () => {
+                                              setGerandoPDF(true)
+                                              try {
+                                                await gerarPDFRisco(imagemPreview!, {
+                                                  tamanho: tamanhoEfetivo,
+                                                  removerMoldura: removerMolduraAtivo,
+                                                  nomeArquivo: 'risco'
+                                                })
+                                                showAlert('Sucesso!', 'PDF Gerado com sucesso!');
+                                              } catch {
+                                                showAlert('Erro', 'Erro ao gerar PDF. Tente novamente.');
+                                              } finally {
+                                                setGerandoPDF(false)
+                                              }
+                                            }}
+                                            disabled={gerandoPDF || processandoPreview || (usandoPersonalizado && !tamanhoPersonalizadoValido)}
+                                            style={{
+                                              flex: 2, padding: '13px', borderRadius: '12px',
+                                              background: gerandoPDF || processandoPreview || (usandoPersonalizado && !tamanhoPersonalizadoValido) ? '#E5D9CC' : '#AC5148',
+                                              color: gerandoPDF || processandoPreview || (usandoPersonalizado && !tamanhoPersonalizadoValido) ? '#AAAAAA' : 'white',
+                                              border: 'none', fontWeight: 700, fontSize: '14px',
+                                              cursor: gerandoPDF || processandoPreview || (usandoPersonalizado && !tamanhoPersonalizadoValido) ? 'not-allowed' : 'pointer',
+                                              boxShadow: gerandoPDF || processandoPreview ? 'none' : '0 4px 16px rgba(172,81,72,0.3)',
+                                              transition: 'all 0.2s ease'
+                                            }}
+                                          >
+                                            {gerandoPDF
+                                              ? '⏳ Solicitando A4...'
+                                              : `📄 Baixar PDF ${tamanhoEfetivo}cm`}
+                                          </button>
                                         </div>
-                                    </div>
+                                      </div>
+                                    )}
                                     
                                     <Button variant="ghost" onClick={handleDownload} className="text-text-light hover:text-text rounded-full mt-2 w-full text-sm">
                                         Baixar apenas a imagem (PNG) <Download className="w-4 h-4 ml-2" />

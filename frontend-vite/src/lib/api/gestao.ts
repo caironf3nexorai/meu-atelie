@@ -115,13 +115,27 @@ export const gestaoApi = {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Não autenticado');
 
-        const { data, error } = await supabase.from('clients').insert({ ...client, user_id: user.id }).select().single();
+        const payload: any = { ...client, user_id: user.id };
+        // Converter strings vazias para null para evitar erros de casting no Supabase (ex: data inválida)
+        Object.keys(payload).forEach(key => {
+            if (payload[key] === '') {
+                payload[key] = null;
+            }
+        });
+
+        const { data, error } = await supabase.from('clients').insert(payload).select().single();
         if (error) throw error;
         return data as Client;
     },
     async updateClient(id: string, clientData: Partial<Client>) {
         const supabase = createClient();
-        const { data, error } = await supabase.from('clients').update(clientData).eq('id', id).select().single();
+        const payload: any = { ...clientData };
+        Object.keys(payload).forEach(key => {
+            if (payload[key] === '') {
+                payload[key] = null;
+            }
+        });
+        const { data, error } = await supabase.from('clients').update(payload).eq('id', id).select().single();
         if (error) throw error;
         return data as Client;
     },

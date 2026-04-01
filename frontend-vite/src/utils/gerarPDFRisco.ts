@@ -6,7 +6,7 @@ const A4_LARGURA_CM = 21
 const A4_ALTURA_CM = 29.7
 
 export interface OpcoesPDFRisco {
-  tamanho: 13 | 16 | 20 | 22
+  tamanho: number
   removerMoldura: boolean
   nomeArquivo?: string
 }
