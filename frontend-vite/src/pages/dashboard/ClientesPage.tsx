@@ -52,9 +52,9 @@ export default function ClientesPage() {
             setIsCreateOpen(false);
             setFormData(initialFormData);
             showAlert('Sucesso', 'Cliente cadastrada com sucesso!');
-        } catch (e) {
+        } catch (e: any) {
             console.error(e);
-            showAlert('Erro', 'Erro ao criar cliente');
+            showAlert('Erro', `Erro ao criar cliente: ${e.message || JSON.stringify(e)}`);
         } finally {
             setSaving(false);
         }
