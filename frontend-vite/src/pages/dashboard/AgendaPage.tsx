@@ -405,9 +405,19 @@ export default function AgendaPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {emAberto.map(order => {
                                 const atrasada = order.status === 'em_andamento' && isAtrasado(order.delivery_date);
-                                const borderColor = order.status === 'em_andamento' ? 'border-l-warn' : order.status === 'finalizado' ? 'border-l-success' : 'border-l-accent';
-                                const badgeColor = order.status === 'em_andamento' ? 'bg-warn/20 text-warn-dark hover:bg-warn/30' : order.status === 'finalizado' ? 'bg-success/20 text-success-dark hover:bg-success/30' : 'bg-accent/20 text-accent hover:bg-accent/30';
-                                const statusLabel = order.status === 'em_andamento' ? 'Em andamento' : order.status === 'finalizado' ? 'Finalizado' : 'Entregue';
+                                
+                                const statusMap: Record<string, { label: string, color: string, border: string }> = {
+                                    em_aberto: { label: 'Em aberto', color: 'bg-border text-text', border: 'border-l-border' },
+                                    em_andamento: { label: 'Em andamento', color: 'bg-warn/20 text-warn-dark', border: 'border-l-warn' },
+                                    pronto: { label: 'Pronto', color: 'bg-primary/20 text-primary-dark', border: 'border-l-primary' },
+                                    entregue: { label: 'Entregue', color: 'bg-accent/20 text-accent', border: 'border-l-accent' },
+                                    finalizado: { label: 'Finalizado', color: 'bg-success/20 text-success-dark', border: 'border-l-success' }
+                                };
+                                const mapped = statusMap[order.status] || { label: order.status, color: 'bg-gray-200 text-gray-800', border: 'border-l-gray-400' };
+
+                                const borderColor = mapped.border;
+                                const badgeColor = mapped.color;
+                                const statusLabel = mapped.label;
 
                                 return (
                                     <div key={order.id} className={`bg-surface rounded-xl border border-border-light shadow-sm flex flex-col justify-between overflow-hidden relative border-l-4 ${borderColor}`}>
@@ -418,7 +428,7 @@ export default function AgendaPage() {
                                                     <Badge className={`border-0 whitespace-nowrap ${badgeColor}`}>
                                                         {statusLabel}
                                                     </Badge>
-                                                    {atrasada && <Badge variant="destructive" className="border-0 capitalize whitespace-nowrap bg-destructive/10 text-destructive hover:bg-destructive/20">Atrasada</Badge>}
+                                                    {atrasada && <Badge variant="destructive" className="border-0 capitalize whitespace-nowrap bg-destructive/10 text-destructive">Atrasada</Badge>}
                                                 </div>
                                             </div>
                                             <p className="text-text-light font-ui text-sm line-clamp-2 mb-4 min-h-[40px]">
@@ -610,8 +620,8 @@ export default function AgendaPage() {
                                                     <div className="text-right whitespace-nowrap">
                                                         <div className="text-sm font-semibold text-accent">R$ {Number(o.value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
                                                     </div>
-                                                    <Badge className={`whitespace-nowrap ${o.status === 'em_andamento' ? 'bg-warn/20 text-warn-dark border-0' : o.status === 'finalizado' ? 'bg-success/20 text-success-dark border-0' : 'bg-accent/20 text-accent border-0'}`}>
-                                                        {o.status === 'em_andamento' ? 'Em andamento' : o.status === 'finalizado' ? 'Pronta' : 'Entregue'}
+                                                    <Badge className={`whitespace-nowrap border-0 ${o.status === 'em_aberto' ? 'bg-border text-text' : o.status === 'em_andamento' ? 'bg-warn/20 text-warn-dark' : o.status === 'pronto' ? 'bg-primary/20 text-primary-dark' : o.status === 'entregue' ? 'bg-accent/20 text-accent' : 'bg-success/20 text-success-dark'}`}>
+                                                        {o.status === 'em_aberto' ? 'Em aberto' : o.status === 'em_andamento' ? 'Em andamento' : o.status === 'pronto' ? 'Pronto' : o.status === 'entregue' ? 'Entregue' : 'Finalizado'}
                                                     </Badge>
                                                 </div>
                                             </div>
@@ -645,8 +655,8 @@ export default function AgendaPage() {
                                                 </div>
                                                 <div className="text-sm text-text-light line-clamp-2 mb-3 leading-relaxed">{o.description}</div>
                                                 <div className="flex items-center">
-                                                    <Badge className={`px-2 py-0.5 text-[10px] whitespace-nowrap border-0 ${o.status === 'em_andamento' ? 'bg-warn/20 text-warn-dark' : o.status === 'finalizado' ? 'bg-success/20 text-success-dark' : 'bg-accent/20 text-accent'}`}>
-                                                        {o.status === 'em_andamento' ? 'Em andamento' : o.status === 'finalizado' ? 'Pronta' : 'Entregue'}
+                                                    <Badge className={`px-2 py-0.5 text-[10px] whitespace-nowrap border-0 ${o.status === 'em_aberto' ? 'bg-border text-text' : o.status === 'em_andamento' ? 'bg-warn/20 text-warn-dark' : o.status === 'pronto' ? 'bg-primary/20 text-primary-dark' : o.status === 'entregue' ? 'bg-accent/20 text-accent' : 'bg-success/20 text-success-dark'}`}>
+                                                        {o.status === 'em_aberto' ? 'Em aberto' : o.status === 'em_andamento' ? 'Em andamento' : o.status === 'pronto' ? 'Pronto' : o.status === 'entregue' ? 'Entregue' : 'Finalizado'}
                                                     </Badge>
                                                 </div>
                                             </div>
@@ -789,7 +799,7 @@ export default function AgendaPage() {
                             <SheetHeader className="pb-4 border-b border-border-light mb-6">
                                 <div className="flex justify-between items-start">
                                     <SheetTitle className="font-display text-2xl text-text text-left break-words pr-4">{selectedHistoryOrder.clients?.name}</SheetTitle>
-                                    <Badge className={selectedHistoryOrder.status === 'finalizado' ? 'bg-success/20 text-success-dark hover:bg-success/30' : 'bg-accent/20 text-accent hover:bg-accent/30'}>
+                                    <Badge className={selectedHistoryOrder.status === 'finalizado' ? 'bg-success/20 text-success-dark' : 'bg-accent/20 text-accent'}>
                                         {selectedHistoryOrder.status === 'finalizado' ? 'Finalizado' : 'Entregue'}
                                     </Badge>
                                 </div>
