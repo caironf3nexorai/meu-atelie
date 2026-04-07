@@ -121,9 +121,13 @@ export default function AgendaPage() {
         try {
             // Remove empty strings from date/uuid fields to prevent Postgres cast errors
             const payload: any = { ...formData };
-            if (!payload.start_date) delete payload.start_date;
-            if (!payload.delivery_date) delete payload.delivery_date;
-            if (!payload.orcamento_id) delete payload.orcamento_id;
+            
+            // Clean up empty strings to null for postgres compatibility
+            Object.keys(payload).forEach(key => {
+                if (payload[key] === '') payload[key] = null;
+            });
+            // Omit undefined so it falls back to DB defaults
+            if (payload.orcamento_id === undefined) delete payload.orcamento_id;
 
             if (editingOrderId) {
                 await gestaoApi.updateOrder(editingOrderId, payload);
@@ -136,9 +140,9 @@ export default function AgendaPage() {
             setIsCreateOpen(false);
             setFormData({ client_id: '', description: '', start_date: '', delivery_date: '', value: 0, notes: '', status: 'em_aberto' as any, photo_url: null, orcamento_id: undefined });
             setEditingOrderId(null);
-        } catch (e) {
+        } catch (e: any) {
             console.error(e);
-            showAlert('Erro', 'Erro ao salvar encomenda');
+            showAlert('Erro', `Erro ao salvar encomenda: ${e?.message || JSON.stringify(e)}`);
         } finally {
             setSaving(false);
         }
