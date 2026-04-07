@@ -213,7 +213,7 @@ export default function BordadoColoridoPage() {
             }
 
             // Verifica as gerações
-            const { data: prof } = await supabase.from('profiles').select('free_generations_used, extra_credits, plan, free_cycle_expires_at').eq('id', user.id).single();
+            const { data: prof } = await supabase.from('profiles').select('free_generations_used, extra_credits, plan, free_cycle_expires_at, role').eq('id', user.id).single();
             const { data: pConfig } = await supabase.from('plan_config').select('free_generations_limit').single();
 
             const cycleExpired = prof?.free_cycle_expires_at
@@ -224,12 +224,13 @@ export default function BordadoColoridoPage() {
                 ? (pConfig?.free_generations_limit || 0)
                 : (pConfig?.free_generations_limit || 0) - (prof?.free_generations_used || 0);
 
+            const isAdmin = prof?.role === 'admin';
             // Bordado colorido Frontend block pra Free Plan monthly credits
-            if (prof?.plan !== 'premium') {
+            if (prof?.plan !== 'premium' && !isAdmin) {
                 monthlyAvailable = 0;
             }
 
-            const totalAvailable = prof?.plan === 'premium' ? 99999 : monthlyAvailable + (prof?.extra_credits || 0);
+            const totalAvailable = isAdmin || prof?.plan === 'premium' ? 99999 : monthlyAvailable + (prof?.extra_credits || 0);
 
             if (totalAvailable <= 0) {
                 setNeedsCredits(true);

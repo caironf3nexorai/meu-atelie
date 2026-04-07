@@ -22,6 +22,15 @@ serve(async (req) => {
         const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
         const { code } = await req.json()
+        
+        const authHeader = req.headers.get('Authorization')
+        let userId = null
+
+        if (authHeader) {
+            const token = authHeader.replace('Bearer ', '')
+            const { data: { user } } = await supabase.auth.getUser(token)
+            if (user) userId = user.id
+        }
 
         if (!code) {
             return new Response(
@@ -42,6 +51,26 @@ serve(async (req) => {
                 JSON.stringify({ valid: false, error: 'Cupom inválido ou expirado' }),
                 { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             )
+        }
+
+        if (userId) {
+            const { data: alreadyUsed } = await supabase
+                .from('user_coupons')
+                .select('id')
+                .eq('user_id', userId)
+                .eq('coupon_id', coupon.id)
+                .single()
+            
+            if (alreadyUsed) {
+                return new Response(
+                    JSON.stringify({ 
+                        valid: false, 
+                        esgotado: true,
+                        error: 'Você já utilizou este cupom anteriormente. Cada conta tem direito a apenas 1 uso do benefício de fundadora.'
+                    }),
+                    { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                )
+            }
         }
 
         if (coupon.current_uses >= coupon.max_uses) {

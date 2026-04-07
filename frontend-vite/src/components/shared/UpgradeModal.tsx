@@ -63,8 +63,10 @@ export function UpgradeModal({ open, onOpenChange }: UpgradeModalProps) {
                 <div className="flex justify-between items-baseline mb-6">
                     <span className="text-text-muted font-ui">Plano Premium</span>
                     <div className="text-right">
-                        <span className="font-display text-3xl text-text">R$ {Math.floor(planPrice)},{String(planPrice.toFixed(2)).split('.')[1]}</span>
-                        <span className="text-text-light font-ui text-sm">/mês</span>
+                        <div className="font-display text-3xl text-text leading-tight w-full flex justify-end items-end gap-1">
+                            <span>R$ {Math.floor(planPrice)}</span><span className="text-xl">,{String(planPrice.toFixed(2)).split('.')[1]}</span> <span className="text-text-light font-ui text-sm pb-1">/mês</span>
+                        </div>
+                        <div className="text-text-light font-ui text-sm mt-1">ou R$ 970/ano <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded textxs ml-1 font-bold">16% OFF</span></div>
                     </div>
                 </div>
 

@@ -193,6 +193,27 @@ export default function AdminUsersPage() {
         }
     };
 
+    const toggleUserRole = async (userId: string, currentRole: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        const newRole = currentRole === 'admin' ? 'user' : 'admin';
+        const { error } = await supabase
+            .from('profiles')
+            .update({ role: newRole })
+            .eq('id', userId);
+
+        if (error) showAlert('Erro', 'Erro ao atualizar permissão');
+        else {
+            fetchUsers();
+            if (selectedUser?.id === userId) {
+                setSelectedUser({ ...selectedUser, role: newRole });
+            }
+            toast({
+                title: "Permissão Atualizada",
+                description: `O usuário agora é ${newRole === 'admin' ? 'Administrador' : 'Usuário Padrão'}.`
+            });
+        }
+    };
+
     const handleAdjustCredits = async () => {
         if (!selectedUser) return;
         if (creditAdjustment === 0) return;
@@ -381,6 +402,12 @@ export default function AdminUsersPage() {
                                                         className="py-3 px-4 rounded-lg cursor-pointer text-[#AC5148] focus:bg-[#AC5148]/10 focus:text-[#AC5148] font-medium"
                                                     >
                                                         <Calendar className="w-4 h-4 mr-3" /> Alterar Plano Manual
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={(e) => toggleUserRole(user.id, user.role, e)}
+                                                        className="py-3 px-4 rounded-lg cursor-pointer text-blue-600 focus:bg-blue-50 focus:text-blue-600 font-medium"
+                                                    >
+                                                        <ShieldAlert className="w-4 h-4 mr-3" /> {user.role === 'admin' ? 'Remover Admin' : 'Promover a Admin'}
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>

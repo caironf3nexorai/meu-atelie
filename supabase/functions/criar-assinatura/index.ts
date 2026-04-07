@@ -47,8 +47,8 @@ serve(async (req) => {
         const body = await req.json()
         console.log('>>> BODY:', JSON.stringify(body))
 
-        const { user_id, forma_pagamento, card, holder, coupon_code } = body
-        console.log('Dados recebidos do parser - user_id:', user_id, 'holder:', holder?.name)
+        const { user_id, forma_pagamento, card, holder, coupon_code, ciclo } = body
+        console.log('Dados recebidos do parser - user_id:', user_id, 'holder:', holder?.name, 'ciclo:', ciclo)
 
         if (!user_id || !holder || (forma_pagamento === 'CREDIT_CARD' && !card)) {
             console.warn('Faltam parâmetros obrigatórios')
@@ -114,7 +114,13 @@ serve(async (req) => {
 
         // Buscar valor do plano configurado
         const { data: configData } = await supabase.from('plan_config').select('premium_price_brl').maybeSingle()
-        let premiumValue = configData?.premium_price_brl ?? 97.00
+        
+        let subCycle = ciclo === 'YEARLY' ? 'YEARLY' : 'MONTHLY';
+        
+        // Base value: 970 yearly or 97 monthly
+        let premiumValue = subCycle === 'YEARLY' 
+            ? 970.00 
+            : (configData?.premium_price_brl ?? 97.00)
 
         // Verificar cupom se informado
         let couponId = null
@@ -127,7 +133,12 @@ serve(async (req) => {
                 .single()
 
             if (coupon && coupon.current_uses < coupon.max_uses) {
-                premiumValue = coupon.discount_value
+                // discount_value in DB is final monthly price
+                if (subCycle === 'YEARLY') {
+                    premiumValue = coupon.discount_value * 12;
+                } else {
+                    premiumValue = coupon.discount_value;
+                }
                 couponId = coupon.id
             }
         }
@@ -137,8 +148,8 @@ serve(async (req) => {
             billingType: forma_pagamento || 'CREDIT_CARD',
             value: premiumValue,
             nextDueDate: today,
-            cycle: 'MONTHLY',
-            description: 'Meu Ateliê Premium',
+            cycle: subCycle,
+            description: subCycle === 'YEARLY' ? 'Meu Ateliê Premium (Anual)' : 'Meu Ateliê Premium',
         }
 
         if (subscriptionBody.billingType === 'CREDIT_CARD') {
@@ -226,7 +237,12 @@ serve(async (req) => {
             // Cartão — ativar Premium imediatamente
             const now = new Date()
             const expiresAt = new Date()
-            expiresAt.setDate(expiresAt.getDate() + 30)
+            
+            if (subCycle === 'YEARLY') {
+                expiresAt.setFullYear(expiresAt.getFullYear() + 1)
+            } else {
+                expiresAt.setDate(expiresAt.getDate() + 30)
+            }
 
             await supabase
                 .from('profiles')
@@ -249,6 +265,12 @@ serve(async (req) => {
         // Após assinatura criada com sucesso, incrementar uso do cupom se foi usado um válido
         if (couponId) {
             await supabase.rpc('increment_coupon_use', { coupon_id: couponId })
+            
+            // Registrar que este usuário já utilizou o cupom (para evitar re-uso após cancelamento)
+            await supabase.from('user_coupons').insert({
+                user_id: user_id,
+                coupon_id: couponId
+            })
         }
 
         return new Response(JSON.stringify({

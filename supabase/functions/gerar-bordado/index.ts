@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
         // 2. Buscar profile
         const { data: profile, error: profileError } = await supabaseAdmin
             .from('profiles')
-            .select('status, plan, free_generations_used, free_cycle_expires_at, extra_credits')
+            .select('status, plan, free_generations_used, free_cycle_expires_at, extra_credits, role')
             .eq('id', userId)
             .single();
 
@@ -59,13 +59,15 @@ Deno.serve(async (req) => {
         // Refresh profile to get updated cycle data
         const { data: refreshedProfile } = await supabaseAdmin
             .from('profiles')
-            .select('plan, free_generations_used, extra_credits')
+            .select('plan, free_generations_used, extra_credits, role')
             .eq('id', userId)
             .single();
 
         const currentPlan = refreshedProfile?.plan || profile.plan;
         let freeUsed = refreshedProfile?.free_generations_used || profile.free_generations_used;
         let extraCredits = refreshedProfile?.extra_credits ?? profile.extra_credits;
+        const role = refreshedProfile?.role || profile.role;
+        const isAdmin = role === 'admin';
 
         // 4. Verificar permissão e limites
         const { data: planConfig } = await supabaseAdmin
@@ -77,11 +79,12 @@ Deno.serve(async (req) => {
 
         // Definindo limite mensal com base no plano (fallback 9999 para premium ilimitado)
         let limit = currentPlan === 'premium' ? (planConfig.premium_generations_limit || 999999) : planConfig.free_generations_limit;
+        if (isAdmin) limit = 999999;
 
         let monthlyAvailable = limit - freeUsed;
 
         // Bordado Colorido não consome créditos mensais gratuitos
-        if (tipo === 'bordado_colorido' && currentPlan !== 'premium') {
+        if (tipo === 'bordado_colorido' && currentPlan !== 'premium' && !isAdmin) {
             monthlyAvailable = 0;
         }
 
@@ -113,17 +116,19 @@ Deno.serve(async (req) => {
 
         // 7. Consumir créditos
         let creditSource = 'monthly';
-        if (monthlyAvailable > 0) {
-            await supabaseAdmin
-                .from('profiles')
-                .update({ free_generations_used: freeUsed + 1 })
-                .eq('id', userId);
-        } else {
-            creditSource = 'extra';
-            await supabaseAdmin
-                .from('profiles')
-                .update({ extra_credits: extraCredits - 1, welcome_credits_used: true })
-                .eq('id', userId);
+        if (!isAdmin) {
+            if (monthlyAvailable > 0) {
+                await supabaseAdmin
+                    .from('profiles')
+                    .update({ free_generations_used: freeUsed + 1 })
+                    .eq('id', userId);
+            } else {
+                creditSource = 'extra';
+                await supabaseAdmin
+                    .from('profiles')
+                    .update({ extra_credits: extraCredits - 1, welcome_credits_used: true })
+                    .eq('id', userId);
+            }
         }
 
         // 8. Construir prompt e chamar Gemini
@@ -424,16 +429,18 @@ STRICT RULES - FOLLOW EXACTLY:
             // Rollback se a IA falhar
             console.error('Falha na IA:', innerError);
 
-            if (creditSource === 'monthly') {
-                await supabaseAdmin
-                    .from('profiles')
-                    .update({ free_generations_used: freeUsed }) // reverter +1
-                    .eq('id', userId);
-            } else {
-                await supabaseAdmin
-                    .from('profiles')
-                    .update({ extra_credits: extraCredits }) // reverter -1
-                    .eq('id', userId);
+            if (!isAdmin) {
+                if (creditSource === 'monthly') {
+                    await supabaseAdmin
+                        .from('profiles')
+                        .update({ free_generations_used: freeUsed }) // reverter +1
+                        .eq('id', userId);
+                } else {
+                    await supabaseAdmin
+                        .from('profiles')
+                        .update({ extra_credits: extraCredits }) // reverter -1
+                        .eq('id', userId);
+                }
             }
 
             await supabaseAdmin

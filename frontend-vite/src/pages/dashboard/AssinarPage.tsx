@@ -40,6 +40,8 @@ export default function AssinarPage() {
     const [loadingCep, setLoadingCep] = useState(false);
     const [cardFlag, setCardFlag] = useState('unknown');
     const [planPrice, setPlanPrice] = useState(97);
+    const [annualPrice, setAnnualPrice] = useState(970);
+    const [ciclo, setCiclo] = useState<'MONTHLY' | 'YEARLY'>('MONTHLY');
 
     const [formaPagamento, setFormaPagamento] = useState<'cartao' | 'pix' | 'boleto'>('cartao');
     const [resultado, setResultado] = useState<{
@@ -98,9 +100,13 @@ export default function AssinarPage() {
         setVerificandoCupom(true);
 
         try {
+            const { data: { session } } = await supabase.auth.getSession();
             const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verificar-cupom`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    ...(session ? { 'Authorization': `Bearer ${session.access_token}` } : {})
+                },
                 body: JSON.stringify({ code: codigoCupom.toUpperCase() })
             });
             const data = await res.json();
@@ -126,12 +132,14 @@ export default function AssinarPage() {
         if (cupomUrlValue) {
             setCodigoCupom(cupomUrlValue.toUpperCase());
             // Auto verificar após meio segundo
-            setTimeout(() => {
-                // Como handleVerificarCupom usa o state, e state num useEffect de mount inicial
-                // vai ser o inicial, passamos o fetch manual aqui pro load
+            setTimeout(async () => {
+                const { data: { session } } = await supabase.auth.getSession();
                 fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verificar-cupom`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        ...(session ? { 'Authorization': `Bearer ${session.access_token}` } : {})
+                    },
                     body: JSON.stringify({ code: cupomUrlValue.toUpperCase() })
                 }).then(res => res.json()).then(data => {
                     if (data.valid) {
@@ -201,7 +209,8 @@ export default function AssinarPage() {
                     expiryYear: expYear.length === 2 ? `20${expYear}` : expYear,
                     ccv: data.cvv || ''
                 } : null,
-                coupon_code: cupomValido ? codigoCupom : null
+                coupon_code: cupomValido ? codigoCupom : null,
+                ciclo: ciclo
             };
 
             // Resgatar a sessão atual para enviar no cabeçalho Authorization
@@ -262,7 +271,9 @@ export default function AssinarPage() {
                             <span className="text-2xl">🎉</span>
                             <div>
                                 <p className="text-green-700 font-bold m-0">Cupom de desconto aplicado!</p>
-                                <p className="text-text-light text-sm mt-1">Você paga R${Math.floor(cupomInfo.discount_value)}/mês para sempre.</p>
+                                <p className="text-text-light text-sm mt-1">
+                                    Desconto validado para fundadoras (12x de R${Math.floor(cupomInfo.discount_value)}).
+                                </p>
                             </div>
                         </div>
                     )}
@@ -544,23 +555,65 @@ export default function AssinarPage() {
                     </div>
 
                     <div className="flex flex-col mb-8 pb-6 border-b border-white/10">
+                        {/* Toggle Ciclo de Pagamento */}
+                        <div className="flex p-1 bg-white/5 rounded-xl mb-6 relative">
+                            <div 
+                                className="absolute top-1 bottom-1 w-1/2 bg-white/20 rounded-lg transition-transform duration-300 ease-out shadow-sm"
+                                style={{ transform: ciclo === 'MONTHLY' ? 'translateX(0)' : 'translateX(calc(100% - 4px))', left: '2px', width: 'calc(50% - 2px)' }}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setCiclo('MONTHLY')}
+                                className={`flex-1 py-3 text-sm font-bold z-10 transition-colors ${ciclo === 'MONTHLY' ? 'text-white' : 'text-white/40 hover:text-white/70'}`}
+                            >
+                                Mensal
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setCiclo('YEARLY')}
+                                className={`flex-1 py-3 text-sm font-bold z-10 transition-colors ${ciclo === 'YEARLY' ? 'text-white' : 'text-white/40 hover:text-white/70'}`}
+                            >
+                                <span className="flex items-center justify-center gap-1.5">
+                                    Anual <span className="text-[10px] bg-green-500 text-white px-1.5 py-0.5 rounded-full font-extrabold uppercase">16% OFF</span>
+                                </span>
+                            </button>
+                        </div>
+
                         {cupomInfo ? (
                             <div>
-                                <div className="flex items-end gap-2 text-white/50 mb-1">
-                                    <span className="text-2xl font-semibold tracking-tight line-through">R${Math.floor(planPrice)}</span>
-                                    <span className="text-sm pb-1">/mês</span>
+                                <div className="flex items-end gap-2 text-white/40 mb-1">
+                                    <span className="text-2xl font-semibold tracking-tight line-through">
+                                        R${ciclo === 'MONTHLY' ? Math.floor(planPrice) : annualPrice}
+                                    </span>
+                                    <span className="text-sm pb-1">{ciclo === 'MONTHLY' ? '/mês' : '/ano'}</span>
                                 </div>
                                 <div className="flex items-end gap-2">
-                                    <span className="text-5xl font-bold tracking-tight text-[#AC5148]">R${Math.floor(cupomInfo.discount_value)}<span className="text-2xl text-white/60">,00</span></span>
-                                    <span className="text-white/60 mb-1 text-sm">/mês</span>
+                                    <span className="text-5xl font-display font-bold tracking-tight text-white">
+                                        R${ciclo === 'MONTHLY' ? Math.floor(cupomInfo.discount_value) : Math.floor(cupomInfo.discount_value * 12)}
+                                        <span className="text-2xl text-white/50">,00</span>
+                                    </span>
+                                    <span className="text-white/50 mb-1 text-sm">{ciclo === 'MONTHLY' ? '/mês' : '/ano à vista'}</span>
                                 </div>
-                                <p className="text-[#16A34A] text-xs font-bold uppercase tracking-wider mt-3">🔒 Preço garantido para sempre</p>
+                                <p className="text-[#16A34A] text-xs font-bold uppercase tracking-wider mt-3">🔒 Preço de fundadora garantido</p>
                             </div>
                         ) : (
-                            <div className="flex items-end gap-2">
-                                <span className="text-5xl font-bold tracking-tight">R${Math.floor(planPrice)}<span className="text-2xl text-white/60">,{String(planPrice.toFixed(2)).split('.')[1]}</span></span>
-                                <span className="text-white/60 mb-1">/mês</span>
-                            </div>
+                            ciclo === 'MONTHLY' ? (
+                                <div className="flex items-end gap-2">
+                                    <span className="text-5xl font-display font-bold tracking-tight text-white">R${Math.floor(planPrice)}<span className="text-2xl text-white/50">,{String(planPrice.toFixed(2)).split('.')[1]}</span></span>
+                                    <span className="text-white/50 mb-1">/mês</span>
+                                </div>
+                            ) : (
+                                <div>
+                                    <div className="flex items-end gap-2 text-white/40 mb-1">
+                                        <span className="text-2xl font-semibold tracking-tight line-through">R${Math.floor(planPrice * 12)}</span>
+                                        <span className="text-sm pb-1">/ano</span>
+                                    </div>
+                                    <div className="flex items-end gap-2">
+                                        <span className="text-5xl font-display font-bold tracking-tight text-[#16A34A]">R${annualPrice}<span className="text-2xl opacity-75">,00</span></span>
+                                        <span className="text-[#16A34A]/70 mb-1 text-sm">/ano à vista</span>
+                                    </div>
+                                </div>
+                            )
                         )}
                     </div>
 
@@ -571,7 +624,7 @@ export default function AssinarPage() {
                         </li>
                         <li className="flex items-start gap-3">
                             <CheckCircle2 className="w-5 h-5 text-[#F7E1D7] shrink-0 mt-0.5" />
-                            <span className="text-white/80 leading-snug">70 conversas com a IA (Lia)</span>
+                            <span className="text-white/80 leading-snug">70 conversas com a IA (Lia) /mês</span>
                         </li>
                         <li className="flex items-start gap-3">
                             <CheckCircle2 className="w-5 h-5 text-[#F7E1D7] shrink-0 mt-0.5" />

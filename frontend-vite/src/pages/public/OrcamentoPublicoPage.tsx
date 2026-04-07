@@ -182,24 +182,24 @@ export default function OrcamentoPublicoPage() {
         <div style={{ minHeight: '100vh', background: '#F2E9DB', fontFamily: 'Nunito, sans-serif' }}>
 
             {/* CABEÇALHO DA ARTESÃ */}
-            <div style={{ background: 'white', borderBottom: '1px solid #E5D9CC', padding: '20px 24px' }}>
-                <div style={{ maxWidth: '640px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ background: 'white', borderBottom: '1px solid #E5D9CC', padding: '40px 24px' }}>
+                <div style={{ maxWidth: '640px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '24px' }}>
                     {perfil?.atelie_logo_url && (
-                        <img src={perfil.atelie_logo_url} alt="Logo" style={{ height: '56px', objectFit: 'contain' }} />
+                        <img src={perfil.atelie_logo_url} alt="Logo" style={{ height: '80px', objectFit: 'contain' }} />
                     )}
                     <div>
-                        <h2 style={{ margin: 0, color: '#AC5148', fontSize: '18px', fontWeight: 700 }}>
+                        <h2 style={{ margin: 0, color: '#AC5148', fontSize: '28px', fontWeight: 700 }}>
                             {perfil?.atelie_nome || perfil?.full_name}
                         </h2>
-                        <div style={{ display: 'flex', gap: '12px', marginTop: '4px', flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', gap: '16px', marginTop: '8px', flexWrap: 'wrap' }}>
                             {perfil?.atelie_whatsapp && (
-                                <span style={{ color: '#6B6B6B', fontSize: '13px' }}>📱 {perfil.atelie_whatsapp}</span>
+                                <span style={{ color: '#6B6B6B', fontSize: '15px' }}>📱 {perfil.atelie_whatsapp}</span>
                             )}
                             {perfil?.atelie_instagram && (
-                                <span style={{ color: '#6B6B6B', fontSize: '13px' }}>📸 {perfil.atelie_instagram}</span>
+                                <span style={{ color: '#6B6B6B', fontSize: '15px' }}>📸 {perfil.atelie_instagram}</span>
                             )}
                             {perfil?.atelie_cidade && (
-                                <span style={{ color: '#6B6B6B', fontSize: '13px' }}>📍 {perfil.atelie_cidade}, {perfil.atelie_estado}</span>
+                                <span style={{ color: '#6B6B6B', fontSize: '15px' }}>📍 {perfil.atelie_cidade}, {perfil.atelie_estado}</span>
                             )}
                         </div>
                     </div>
