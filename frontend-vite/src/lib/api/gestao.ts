@@ -55,7 +55,7 @@ export interface Order {
     start_date: string | null;
     delivery_date: string;
     value: number;
-    status: 'em_andamento' | 'finalizado' | 'entregue';
+    status: 'em_aberto' | 'em_andamento' | 'pronto' | 'entregue' | 'finalizado';
     notes: string | null;
     photo_url: string | null;
     created_at: string;

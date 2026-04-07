@@ -6,12 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Loader2, Plus, Calendar as CalendarIcon, List, Archive, CheckCircle, Package, Trash2, Edit, Clock, DollarSign, AlertTriangle, ArrowRight, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Loader2, Plus, Calendar as CalendarIcon, List, Archive, CheckCircle, Package, Trash2, Edit, Clock, DollarSign, AlertTriangle, ArrowRight, X, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useModal } from '@/contexts/ModalContext';
 import { useLocation } from 'react-router-dom';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 export default function AgendaPage() {
     const location = useLocation();
@@ -425,9 +426,21 @@ export default function AgendaPage() {
                                             <div className="flex justify-between items-start mb-2 gap-2">
                                                 <h3 className="font-display font-medium text-lg text-text leading-tight truncate">{order.clients?.name}</h3>
                                                 <div className="flex flex-col gap-1 items-end">
-                                                    <Badge className={`border-0 whitespace-nowrap ${badgeColor}`}>
-                                                        {statusLabel}
-                                                    </Badge>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger className="focus:outline-none">
+                                                            <Badge className={`border-0 whitespace-nowrap cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-1 ${badgeColor}`}>
+                                                                {statusLabel}
+                                                                <ChevronDown className="w-3 h-3 opacity-70" />
+                                                            </Badge>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end" className="w-48 bg-white border border-border-light shadow-md rounded-xl p-1">
+                                                            <DropdownMenuItem className="cursor-pointer font-ui text-sm px-3 py-2 rounded-lg hover:bg-surface-warm" onClick={() => gestaoApi.updateOrderStatus(order.id, 'em_aberto').then(loadOrders)}>⏳ Em aberto</DropdownMenuItem>
+                                                            <DropdownMenuItem className="cursor-pointer font-ui text-sm px-3 py-2 rounded-lg hover:bg-surface-warm" onClick={() => gestaoApi.updateOrderStatus(order.id, 'em_andamento').then(loadOrders)}>🪡 Em andamento</DropdownMenuItem>
+                                                            <DropdownMenuItem className="cursor-pointer font-ui text-sm px-3 py-2 rounded-lg hover:bg-surface-warm" onClick={() => gestaoApi.updateOrderStatus(order.id, 'pronto').then(loadOrders)}>✅ Pronto</DropdownMenuItem>
+                                                            <DropdownMenuItem className="cursor-pointer font-ui text-sm px-3 py-2 rounded-lg hover:bg-surface-warm" onClick={() => gestaoApi.updateOrderStatus(order.id, 'entregue').then(loadOrders)}>📦 Entregue</DropdownMenuItem>
+                                                            <DropdownMenuItem className="cursor-pointer font-ui text-sm px-3 py-2 rounded-lg hover:bg-surface-warm text-success-dark font-medium" onClick={() => openFinishModal(order)}>✅ Baixa de Estoque</DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
                                                     {atrasada && <Badge variant="destructive" className="border-0 capitalize whitespace-nowrap bg-destructive/10 text-destructive">Atrasada</Badge>}
                                                 </div>
                                             </div>
@@ -620,9 +633,21 @@ export default function AgendaPage() {
                                                     <div className="text-right whitespace-nowrap">
                                                         <div className="text-sm font-semibold text-accent">R$ {Number(o.value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
                                                     </div>
-                                                    <Badge className={`whitespace-nowrap border-0 ${o.status === 'em_aberto' ? 'bg-border text-text' : o.status === 'em_andamento' ? 'bg-warn/20 text-warn-dark' : o.status === 'pronto' ? 'bg-primary/20 text-primary-dark' : o.status === 'entregue' ? 'bg-accent/20 text-accent' : 'bg-success/20 text-success-dark'}`}>
-                                                        {o.status === 'em_aberto' ? 'Em aberto' : o.status === 'em_andamento' ? 'Em andamento' : o.status === 'pronto' ? 'Pronto' : o.status === 'entregue' ? 'Entregue' : 'Finalizado'}
-                                                    </Badge>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger className="focus:outline-none" onClick={(e) => e.stopPropagation()}>
+                                                            <Badge className={`whitespace-nowrap border-0 cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-1 ${o.status === 'em_aberto' ? 'bg-border text-text' : o.status === 'em_andamento' ? 'bg-warn/20 text-warn-dark' : o.status === 'pronto' ? 'bg-primary/20 text-primary-dark' : o.status === 'entregue' ? 'bg-accent/20 text-accent' : 'bg-success/20 text-success-dark'}`}>
+                                                                {o.status === 'em_aberto' ? 'Em aberto' : o.status === 'em_andamento' ? 'Em andamento' : o.status === 'pronto' ? 'Pronto' : o.status === 'entregue' ? 'Entregue' : 'Finalizado'}
+                                                                <ChevronDown className="w-3 h-3 opacity-70" />
+                                                            </Badge>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end" className="w-48 bg-white border border-border-light shadow-md rounded-xl p-1">
+                                                            <DropdownMenuItem className="cursor-pointer font-ui text-sm px-3 py-2 rounded-lg hover:bg-surface-warm" onClick={(e) => { e.stopPropagation(); gestaoApi.updateOrderStatus(o.id, 'em_aberto').then(loadOrders); }}>⏳ Em aberto</DropdownMenuItem>
+                                                            <DropdownMenuItem className="cursor-pointer font-ui text-sm px-3 py-2 rounded-lg hover:bg-surface-warm" onClick={(e) => { e.stopPropagation(); gestaoApi.updateOrderStatus(o.id, 'em_andamento').then(loadOrders); }}>🪡 Em andamento</DropdownMenuItem>
+                                                            <DropdownMenuItem className="cursor-pointer font-ui text-sm px-3 py-2 rounded-lg hover:bg-surface-warm" onClick={(e) => { e.stopPropagation(); gestaoApi.updateOrderStatus(o.id, 'pronto').then(loadOrders); }}>✅ Pronto</DropdownMenuItem>
+                                                            <DropdownMenuItem className="cursor-pointer font-ui text-sm px-3 py-2 rounded-lg hover:bg-surface-warm" onClick={(e) => { e.stopPropagation(); gestaoApi.updateOrderStatus(o.id, 'entregue').then(loadOrders); }}>📦 Entregue</DropdownMenuItem>
+                                                            <DropdownMenuItem className="cursor-pointer font-ui text-sm px-3 py-2 rounded-lg hover:bg-surface-warm text-success-dark font-medium" onClick={(e) => { e.stopPropagation(); openFinishModal(o); }}>✅ Baixa de Estoque</DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
                                                 </div>
                                             </div>
                                         ))}
@@ -655,9 +680,21 @@ export default function AgendaPage() {
                                                 </div>
                                                 <div className="text-sm text-text-light line-clamp-2 mb-3 leading-relaxed">{o.description}</div>
                                                 <div className="flex items-center">
-                                                    <Badge className={`px-2 py-0.5 text-[10px] whitespace-nowrap border-0 ${o.status === 'em_aberto' ? 'bg-border text-text' : o.status === 'em_andamento' ? 'bg-warn/20 text-warn-dark' : o.status === 'pronto' ? 'bg-primary/20 text-primary-dark' : o.status === 'entregue' ? 'bg-accent/20 text-accent' : 'bg-success/20 text-success-dark'}`}>
-                                                        {o.status === 'em_aberto' ? 'Em aberto' : o.status === 'em_andamento' ? 'Em andamento' : o.status === 'pronto' ? 'Pronto' : o.status === 'entregue' ? 'Entregue' : 'Finalizado'}
-                                                    </Badge>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger className="focus:outline-none" onClick={(e) => e.stopPropagation()}>
+                                                            <Badge className={`px-2 py-0.5 text-[10px] whitespace-nowrap border-0 cursor-pointer hover:opacity-80 flex items-center gap-1 ${o.status === 'em_aberto' ? 'bg-border text-text' : o.status === 'em_andamento' ? 'bg-warn/20 text-warn-dark' : o.status === 'pronto' ? 'bg-primary/20 text-primary-dark' : o.status === 'entregue' ? 'bg-accent/20 text-accent' : 'bg-success/20 text-success-dark'}`}>
+                                                                {o.status === 'em_aberto' ? 'Em aberto' : o.status === 'em_andamento' ? 'Em andamento' : o.status === 'pronto' ? 'Pronto' : o.status === 'entregue' ? 'Entregue' : 'Finalizado'}
+                                                                <ChevronDown className="w-2 h-2 opacity-70" />
+                                                            </Badge>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="start" className="w-48 bg-white border border-border-light shadow-md rounded-xl p-1 z-50">
+                                                            <DropdownMenuItem className="cursor-pointer font-ui text-sm px-3 py-2 rounded-lg hover:bg-surface-warm" onClick={(e) => { e.stopPropagation(); gestaoApi.updateOrderStatus(o.id, 'em_aberto').then(loadOrders); }}>⏳ Em aberto</DropdownMenuItem>
+                                                            <DropdownMenuItem className="cursor-pointer font-ui text-sm px-3 py-2 rounded-lg hover:bg-surface-warm" onClick={(e) => { e.stopPropagation(); gestaoApi.updateOrderStatus(o.id, 'em_andamento').then(loadOrders); }}>🪡 Em andamento</DropdownMenuItem>
+                                                            <DropdownMenuItem className="cursor-pointer font-ui text-sm px-3 py-2 rounded-lg hover:bg-surface-warm" onClick={(e) => { e.stopPropagation(); gestaoApi.updateOrderStatus(o.id, 'pronto').then(loadOrders); }}>✅ Pronto</DropdownMenuItem>
+                                                            <DropdownMenuItem className="cursor-pointer font-ui text-sm px-3 py-2 rounded-lg hover:bg-surface-warm" onClick={(e) => { e.stopPropagation(); gestaoApi.updateOrderStatus(o.id, 'entregue').then(loadOrders); }}>📦 Entregue</DropdownMenuItem>
+                                                            <DropdownMenuItem className="cursor-pointer font-ui text-sm px-3 py-2 rounded-lg hover:bg-surface-warm text-success-dark font-medium" onClick={(e) => { e.stopPropagation(); openFinishModal(o); }}>✅ Baixa de Estoque</DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
                                                 </div>
                                             </div>
                                         ))}
