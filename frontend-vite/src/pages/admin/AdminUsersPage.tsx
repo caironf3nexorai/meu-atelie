@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Search, MoreVertical, ShieldAlert, ShieldCheck, Loader2, Filter, User, Calendar, CreditCard, Activity, MapPin, X } from 'lucide-react';
+import { Search, MoreVertical, ShieldAlert, ShieldCheck, Loader2, Filter, User, Calendar, CreditCard, Activity, MapPin, X, Percent } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -132,6 +132,98 @@ function PlanModal({ user, onClose, onRefresh }: { user: any, onClose: () => voi
     );
 }
 
+// --- MODAL DE PARCEIRA ---
+function PartnerModal({ user, onClose, onRefresh }: { user: any, onClose: () => void, onRefresh: () => void }) {
+    const supabase = createClient();
+    const { toast } = useToast();
+    const [isPartner, setIsPartner] = useState(user.is_partner || false);
+    const [percent, setPercent] = useState(user.partner_commission_percent || 0);
+    const [saving, setSaving] = useState(false);
+
+    const handleSave = async () => {
+        setSaving(true);
+        try {
+            const updates = { 
+                is_partner: isPartner,
+                partner_commission_percent: parseFloat(percent as string) || 0
+            };
+
+            const { error } = await supabase
+                .from('profiles')
+                .update(updates)
+                .eq('id', user.id);
+
+            if (error) throw error;
+
+            toast({
+                title: "Configuração de Parceira Salva",
+                description: `As configurações de parceria para ${user.full_name || 'Usuário'} foram atualizadas.`
+            });
+            onRefresh();
+            onClose();
+        } catch (error: any) {
+            toast({
+                title: "Falha ao salvar",
+                description: error.message,
+                variant: 'destructive'
+            });
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
+            <div className="bg-white rounded-[2rem] p-5 sm:p-8 max-w-md w-full shadow-2xl relative font-ui text-[#2D2D2D]">
+                <button onClick={onClose} className="absolute top-6 right-6 text-[#2D2D2D]/50 hover:text-[#2D2D2D]">
+                    <X className="w-5 h-5" />
+                </button>
+                <h3 className="font-display text-2xl font-bold mb-1">Configurar Parceria</h3>
+                <p className="mb-6 truncate text-[#6B6B6B]">{user.full_name || 'Sem Nome'} ({user.email})</p>
+
+                <div className="space-y-4 mb-6">
+                    <div className="flex items-center justify-between bg-stone-50 p-4 rounded-xl border border-[#E5D9CC]">
+                        <div>
+                            <p className="font-bold">É Parceira?</p>
+                            <p className="text-xs text-[#6B6B6B]">Ativa ou desativa o painel de parceira e ganhos futuros.</p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" className="sr-only peer" checked={isPartner} onChange={(e) => setIsPartner(e.target.checked)} />
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#AC5148]"></div>
+                        </label>
+                    </div>
+
+                    {isPartner && (
+                        <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-2">
+                            <label className="text-sm font-bold text-[#2D2D2D]/60 uppercase tracking-wider block">Comissão por Assinatura (%)</label>
+                            <Input
+                                type="number"
+                                min="0"
+                                max="100"
+                                step="0.1"
+                                value={percent}
+                                onChange={(e) => setPercent(e.target.value)}
+                                className="h-12 rounded-xl"
+                                placeholder="Ex: 10"
+                            />
+                            <p className="text-xs text-[#6B6B6B]">Essa porcentagem será aplicada em cada assinatura que entrar pelo link desta usuária.</p>
+                        </div>
+                    )}
+                </div>
+
+                <div className="flex gap-3 mt-8">
+                    <button disabled={saving} onClick={onClose} className="flex-1 py-3.5 rounded-xl border border-[#E5D9CC] bg-white font-semibold">
+                        Cancelar
+                    </button>
+                    <button disabled={saving} onClick={handleSave} className="flex-1 py-3.5 rounded-xl bg-[#AC5148] text-white border-0 font-semibold flex justify-center items-center">
+                        {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Salvar Alteração'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function AdminUsersPage() {
     const supabase = createClient();
     const { showAlert, showConfirm } = useModal();
@@ -147,6 +239,10 @@ export default function AdminUsersPage() {
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [creditAdjustment, setCreditAdjustment] = useState<number>(0);
     const [isAdjusting, setIsAdjusting] = useState(false);
+    
+    // Partner Commissions State
+    const [partnerCommissions, setPartnerCommissions] = useState<any[]>([]);
+    const [loadingCommissions, setLoadingCommissions] = useState(false);
 
     // Filter and Cards State
     const [waitlistCount, setWaitlistCount] = useState(0);
@@ -154,6 +250,7 @@ export default function AdminUsersPage() {
 
     // Modal Plano State
     const [modalUser, setModalUser] = useState<any | null>(null);
+    const [partnerModalUser, setPartnerModalUser] = useState<any | null>(null);
 
     useEffect(() => {
         fetchUsers();
@@ -245,9 +342,45 @@ export default function AdminUsersPage() {
         });
     };
 
+    const fetchCommissions = async (userId: string) => {
+        setLoadingCommissions(true);
+        const { data, error } = await supabase
+            .from('partner_commissions')
+            .select('*')
+            .eq('partner_id', userId)
+            .order('created_at', { ascending: false });
+        if (!error) setPartnerCommissions(data || []);
+        setLoadingCommissions(false);
+    };
+
+    const handlePayCommissions = async () => {
+        if (!selectedUser) return;
+        const pendingCommissions = partnerCommissions.filter(c => c.status === 'pending');
+        if (pendingCommissions.length === 0) return;
+
+        const total = pendingCommissions.reduce((sum, c) => sum + Number(c.amount), 0);
+        showConfirm('Pagar Comissões', `Marcar R$ ${total.toFixed(2)} em comissões pendentes como PAGAS para ${selectedUser.full_name}?`, async () => {
+            const { error } = await supabase
+                .from('partner_commissions')
+                .update({ status: 'paid' })
+                .eq('partner_id', selectedUser.id)
+                .eq('status', 'pending');
+
+            if (error) {
+                showAlert('Erro', 'Erro ao atualizar comissões: ' + error.message);
+            } else {
+                fetchCommissions(selectedUser.id);
+                toast({ title: 'Sucesso', description: 'Comissões marcadas como pagas.' });
+            }
+        });
+    };
+
     const openUserDetails = (user: any) => {
         setSelectedUser(user);
         setIsSheetOpen(true);
+        if (user.is_partner) {
+            fetchCommissions(user.id);
+        }
     };
 
     const filteredUsers = users.filter(u => {
@@ -402,6 +535,12 @@ export default function AdminUsersPage() {
                                                         className="py-3 px-4 rounded-lg cursor-pointer text-[#AC5148] focus:bg-[#AC5148]/10 focus:text-[#AC5148] font-medium"
                                                     >
                                                         <Calendar className="w-4 h-4 mr-3" /> Alterar Plano Manual
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={(e) => { e.stopPropagation(); setPartnerModalUser(user); }}
+                                                        className="py-3 px-4 rounded-lg cursor-pointer text-purple-600 focus:bg-purple-50 focus:text-purple-600 font-medium"
+                                                    >
+                                                        <Percent className="w-4 h-4 mr-3" /> {user.is_partner ? 'Editar Parceria' : 'Tornar Parceira'}
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem
                                                         onClick={(e) => toggleUserRole(user.id, user.role, e)}
@@ -586,6 +725,52 @@ export default function AdminUsersPage() {
                                     </div>
                                 </section>
 
+                                {selectedUser.is_partner && (
+                                    <>
+                                        <Separator className="bg-border-light" />
+                                        <section>
+                                            <h4 className="font-ui text-xs font-bold text-text-muted uppercase tracking-wider mb-3 flex items-center justify-between">
+                                                Comissões de Parceria
+                                                <Badge variant="outline" className="bg-purple-50 text-purple-600 border-purple-200">
+                                                    {selectedUser.partner_commission_percent}% / Assinatura
+                                                </Badge>
+                                            </h4>
+                                            
+                                            <div className="bg-white rounded-2xl p-4 border border-border/50 shadow-sm space-y-4">
+                                                {loadingCommissions ? (
+                                                    <div className="flex justify-center p-4"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>
+                                                ) : (
+                                                    <>
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="font-ui text-sm text-text-light">Total Pendente</span>
+                                                            <span className="font-ui text-sm font-bold text-amber-600">
+                                                                R$ {partnerCommissions.filter(c => c.status === 'pending').reduce((s,c) => s + Number(c.amount), 0).toFixed(2)}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="font-ui text-sm text-text-light">Total Pago (Histórico)</span>
+                                                            <span className="font-ui text-sm font-bold text-green-600">
+                                                                R$ {partnerCommissions.filter(c => c.status === 'paid').reduce((s,c) => s + Number(c.amount), 0).toFixed(2)}
+                                                            </span>
+                                                        </div>
+                                                        
+                                                        {partnerCommissions.filter(c => c.status === 'pending').length > 0 && (
+                                                            <div className="pt-2 mt-2 border-t border-border-light">
+                                                                <Button 
+                                                                    onClick={handlePayCommissions}
+                                                                    className="w-full bg-green-600 hover:bg-green-700 text-white rounded-xl h-10 font-bold text-xs"
+                                                                >
+                                                                    Marcar Pendentes como Pagas
+                                                                </Button>
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </div>
+                                        </section>
+                                    </>
+                                )}
+
                                 <div className="pt-4">
                                     <Button
                                         variant={selectedUser.status === 'blocked' ? 'default' : 'destructive'}
@@ -605,6 +790,14 @@ export default function AdminUsersPage() {
                 <PlanModal
                     user={modalUser}
                     onClose={() => setModalUser(null)}
+                    onRefresh={fetchUsers}
+                />
+            )}
+
+            {partnerModalUser && (
+                <PartnerModal
+                    user={partnerModalUser}
+                    onClose={() => setPartnerModalUser(null)}
                     onRefresh={fetchUsers}
                 />
             )}

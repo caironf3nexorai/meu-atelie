@@ -51,11 +51,13 @@ const AdminSettingsPage = React.lazy(() => import('@/pages/admin/AdminSettingsPa
 const AdminPackagesPage = React.lazy(() => import('@/pages/admin/AdminPackagesPage'));
 const AdminConvitesPage = React.lazy(() => import('@/pages/admin/AdminConvitesPage'));
 const AdminEmailsPage = React.lazy(() => import('@/pages/admin/AdminEmailsPage'));
+const AdminParceirasPage = React.lazy(() => import('@/pages/admin/AdminParceirasPage'));
 const InfraestruturaPage = React.lazy(() => import('@/pages/admin/InfraestruturaPage'));
 const AdminLayout = React.lazy(() => import('@/components/layout/AdminLayout'));
 
 const LandingPage = React.lazy(() => import('@/pages/public/LandingPage'));
 const IndicacoesPage = React.lazy(() => import('@/pages/dashboard/IndicacoesPage'));
+const ParceirasPage = React.lazy(() => import('@/pages/dashboard/ParceirasPage'));
 
 const AuthLayout = React.lazy(() => import('@/components/layout/AuthLayout'));
 
@@ -126,6 +128,7 @@ const router = createBrowserRouter([
                     { path: 'financeiro', element: <FinanceiroPage /> },
                     { path: 'estrategia', element: <EstrategiaPage /> },
                     { path: 'indicacoes', element: <IndicacoesPage /> },
+                    { path: 'dashboard/parceiras', element: <ParceirasPage /> },
                     { path: 'perfil', element: <PerfilPage /> },
                 ]
             }
@@ -143,6 +146,7 @@ const router = createBrowserRouter([
                     { path: 'usuarios', element: <AdminUsersPage /> },
                     { path: 'pagamentos', element: <AdminPaymentsPage /> },
                     { path: 'pacotes', element: <AdminPackagesPage /> },
+                    { path: 'parceiras', element: <AdminParceirasPage /> },
                     { path: 'convites', element: <AdminConvitesPage /> },
                     { path: 'emails', element: <AdminEmailsPage /> },
                     { path: 'infraestrutura', element: <InfraestruturaPage /> },

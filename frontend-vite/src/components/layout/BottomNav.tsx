@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, PlusCircle, PieChart, User, ShoppingBag, Shield, Calendar, Users, Package, FileText, Truck, Paintbrush, Gift, Lock, DollarSign, Sparkles, Timer } from 'lucide-react';
+import { Home, PlusCircle, PieChart, User, ShoppingBag, Shield, Calendar, Users, Package, FileText, Truck, Paintbrush, Gift, Lock, DollarSign, Sparkles, Timer, Percent } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UpgradeModal } from '../shared/UpgradeModal';
 import { useAuth } from '@/lib/hooks/useAuth';
@@ -98,6 +98,12 @@ export function BottomNav() {
                                     <div className="bg-[#E2C5B9]/30 p-2.5 rounded-xl text-[#2D2D2D]"><Gift className="w-5 h-5" /></div>
                                     <span className="font-medium font-ui text-xs text-center">Indicações</span>
                                 </Link>
+                                {profile?.is_partner && (
+                                    <Link to="/dashboard/parceiras" onClick={() => setShowGestaoSheet(false)} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-surface hover:bg-surface-warm border border-border-light text-text transition-colors shadow-sm">
+                                        <div className="bg-[#E2C5B9]/30 p-2.5 rounded-xl text-[#2D2D2D]"><Percent className="w-5 h-5" /></div>
+                                        <span className="font-medium font-ui text-xs text-center">Parceiras</span>
+                                    </Link>
+                                )}
                             </div>
                         </div>
 

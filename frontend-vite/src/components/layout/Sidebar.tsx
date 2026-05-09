@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Image as ImageIcon, Paintbrush, DollarSign, PieChart, Sparkles, User, LogOut, Lock, ShoppingBag, Shield, Gift, Calendar, Users, Package, Timer, FileText, Truck } from 'lucide-react';
+import { Home, Image as ImageIcon, Paintbrush, DollarSign, PieChart, Sparkles, User, LogOut, Lock, ShoppingBag, Shield, Gift, Calendar, Users, Package, Timer, FileText, Truck, Percent } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UpgradeModal } from '../shared/UpgradeModal';
 import { createClient } from '@/lib/supabase/client';
@@ -145,6 +145,18 @@ export function Sidebar() {
                             )}>
                                 <Shield className={cn("w-4 h-4 shrink-0", pathname.startsWith('/admin') ? 'text-white' : 'text-[#2D2D2D]/70 group-hover:text-[#2D2D2D]')} />
                                 <span className="flex-1">Painel Admin</span>
+                            </Link>
+                        )}
+
+                        {authProfile?.is_partner && (
+                            <Link to="/dashboard/parceiras" className={cn(
+                                'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 font-ui text-sm group text-left relative',
+                                pathname.startsWith('/dashboard/parceiras')
+                                    ? 'bg-[#AC5148] text-white font-medium shadow-sm'
+                                    : 'text-[#2D2D2D] hover:bg-[#E2C5B9] hover:text-[#2D2D2D]'
+                            )}>
+                                <Percent className={cn("w-4 h-4 shrink-0", pathname.startsWith('/dashboard/parceiras') ? 'text-white' : 'text-[#2D2D2D]/70 group-hover:text-[#2D2D2D]')} />
+                                <span className="flex-1">Painel Parceiras</span>
                             </Link>
                         )}
                     </div>

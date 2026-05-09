@@ -66,30 +66,38 @@ serve(async (req) => {
                     JSON.stringify({ 
                         valid: false, 
                         esgotado: true,
-                        error: 'Você já utilizou este cupom anteriormente. Cada conta tem direito a apenas 1 uso do benefício de fundadora.'
+                        error: 'Você já utilizou este cupom anteriormente. Cada conta tem direito a apenas 1 uso deste benefício.'
                     }),
                     { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
                 )
             }
         }
 
-        if (coupon.current_uses >= coupon.max_uses) {
+        if (coupon.current_uses >= coupon.max_uses && !coupon.is_partner_coupon) {
             return new Response(
                 JSON.stringify({
                     valid: false,
                     esgotado: true,
-                    error: `Esse benefício já foi resgatado pelas ${coupon.max_uses} primeiras fundadoras. Você ainda pode assinar por R$97/mês!`
+                    error: `Esse benefício já foi resgatado pelas ${coupon.max_uses} primeiras pessoas.`
                 }),
                 { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             )
+        }
+
+        let message = `🎉 Cupom aplicado!`;
+        if (coupon.is_partner_coupon) {
+            message = `🎉 Cupom de parceira aplicado: ${coupon.discount_value}% de desconto!`;
+        } else if (coupon.max_uses < 999999) {
+            message = `🎉 Cupom aplicado! Apenas ${coupon.max_uses - coupon.current_uses} vagas restantes.`;
         }
 
         return new Response(
             JSON.stringify({
                 valid: true,
                 discount_value: coupon.discount_value,
+                is_partner_coupon: coupon.is_partner_coupon,
                 remaining: coupon.max_uses - coupon.current_uses,
-                message: `🎉 Cupom aplicado! Apenas ${coupon.max_uses - coupon.current_uses} vagas restantes.`
+                message: message
             }),
             { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )

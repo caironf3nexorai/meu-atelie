@@ -270,10 +270,7 @@ export default function AssinarPage() {
                         <div className="bg-green-50/50 border border-green-500/20 rounded-xl p-4 mb-6 flex items-center gap-3">
                             <span className="text-2xl">🎉</span>
                             <div>
-                                <p className="text-green-700 font-bold m-0">Cupom de desconto aplicado!</p>
-                                <p className="text-text-light text-sm mt-1">
-                                    Desconto validado para fundadoras (12x de R${Math.floor(cupomInfo.discount_value)}).
-                                </p>
+                                <p className="text-green-700 font-bold m-0">{cupomInfo.message || 'Cupom de desconto aplicado!'}</p>
                             </div>
                         </div>
                     )}
@@ -545,7 +542,7 @@ export default function AssinarPage() {
                                     ✅ Cupom {codigoCupom || 'aplicado'}!
                                 </span>
                                 <span style={{ color: '#16A34A', fontWeight: 800 }}>
-                                    R${cupomValido.desconto}/mês
+                                    {cupomValido.is_partner_coupon ? `${cupomValido.desconto}% OFF` : `R$${cupomValido.desconto}/mês`}
                                     <span style={{ textDecoration: 'line-through', color: '#AAAAAA', marginLeft: '8px', fontSize: '12px' }}>
                                         R${Math.floor(planPrice)}
                                     </span>
@@ -589,12 +586,16 @@ export default function AssinarPage() {
                                 </div>
                                 <div className="flex items-end gap-2">
                                     <span className="text-5xl font-display font-bold tracking-tight text-white">
-                                        R${ciclo === 'MONTHLY' ? Math.floor(cupomInfo.discount_value) : Math.floor(cupomInfo.discount_value * 12)}
+                                        R${
+                                            cupomInfo.is_partner_coupon
+                                            ? Math.floor((ciclo === 'MONTHLY' ? planPrice : annualPrice) * (1 - cupomInfo.discount_value / 100))
+                                            : Math.floor(ciclo === 'MONTHLY' ? cupomInfo.discount_value : (cupomInfo.discount_value * 12))
+                                        }
                                         <span className="text-2xl text-white/50">,00</span>
                                     </span>
                                     <span className="text-white/50 mb-1 text-sm">{ciclo === 'MONTHLY' ? '/mês' : '/ano à vista'}</span>
                                 </div>
-                                <p className="text-[#16A34A] text-xs font-bold uppercase tracking-wider mt-3">🔒 Preço de fundadora garantido</p>
+                                <p className="text-[#16A34A] text-xs font-bold uppercase tracking-wider mt-3">🔒 {cupomInfo.is_partner_coupon ? 'Desconto Especial de Parceira' : 'Preço de fundadora garantido'}</p>
                             </div>
                         ) : (
                             ciclo === 'MONTHLY' ? (

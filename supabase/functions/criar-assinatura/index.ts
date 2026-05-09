@@ -124,6 +124,7 @@ serve(async (req) => {
 
         // Verificar cupom se informado
         let couponId = null
+        let couponData = null
         if (coupon_code) {
             const { data: coupon } = await supabase
                 .from('coupons')
@@ -133,11 +134,23 @@ serve(async (req) => {
                 .single()
 
             if (coupon && coupon.current_uses < coupon.max_uses) {
-                // discount_value in DB is final monthly price
-                if (subCycle === 'YEARLY') {
-                    premiumValue = coupon.discount_value * 12;
+                couponData = coupon;
+                
+                if (coupon.is_partner_coupon) {
+                    // Se for cupom de parceira, o discount_value é uma PORCENTAGEM de desconto
+                    const discountMultiplier = 1 - (coupon.discount_value / 100);
+                    if (subCycle === 'YEARLY') {
+                        premiumValue = premiumValue * discountMultiplier;
+                    } else {
+                        premiumValue = premiumValue * discountMultiplier;
+                    }
                 } else {
-                    premiumValue = coupon.discount_value;
+                    // Para cupons normais/antigos, discount_value é o valor final MENSAL fixo
+                    if (subCycle === 'YEARLY') {
+                        premiumValue = coupon.discount_value * 12;
+                    } else {
+                        premiumValue = coupon.discount_value;
+                    }
                 }
                 couponId = coupon.id
             }
@@ -263,7 +276,7 @@ serve(async (req) => {
         }
 
         // Após assinatura criada com sucesso, incrementar uso do cupom se foi usado um válido
-        if (couponId) {
+        if (couponId && couponData) {
             await supabase.rpc('increment_coupon_use', { coupon_id: couponId })
             
             // Registrar que este usuário já utilizou o cupom (para evitar re-uso após cancelamento)
@@ -271,6 +284,15 @@ serve(async (req) => {
                 user_id: user_id,
                 coupon_id: couponId
             })
+
+            // Se for cupom de parceira, registrar a indicação (referral)
+            if (couponData.partner_id) {
+                // Tenta inserir na tabela referrals ignorando se já existir (para não sobrescrever indicações antigas)
+                await supabase.from('referrals').insert({
+                    referrer_id: couponData.partner_id,
+                    referred_id: user_id
+                }).select().maybeSingle()
+            }
         }
 
         return new Response(JSON.stringify({
