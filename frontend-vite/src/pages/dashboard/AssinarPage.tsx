@@ -54,7 +54,7 @@ export default function AssinarPage() {
     const [codigoCupom, setCodigoCupom] = useState(
         new URLSearchParams(window.location.search).get('cupom') || ''
     );
-    const [cupomValido, setCupomValido] = useState<null | { desconto: number; id: string }>(null);
+    const [cupomValido, setCupomValido] = useState<null | { desconto: number; id: string; is_partner_coupon?: boolean }>(null);
     const [verificandoCupom, setVerificandoCupom] = useState(false);
     
     // Para manter compatibilidade com o resto do código original caso use cupomInfo em outro local
@@ -112,7 +112,7 @@ export default function AssinarPage() {
             const data = await res.json();
 
             if (data.valid) {
-                setCupomValido({ desconto: data.discount_value, id: data.id });
+                setCupomValido({ desconto: data.discount_value, id: data.id, is_partner_coupon: data.is_partner_coupon });
                 setCupomInfo(data); // atualiza state legado q printa UI do cupomInfo original
                 toast({ title: 'Sucesso', description: `Cupom aplicado! R$${data.discount_value}/mês` });
             } else {
@@ -143,7 +143,7 @@ export default function AssinarPage() {
                     body: JSON.stringify({ code: cupomUrlValue.toUpperCase() })
                 }).then(res => res.json()).then(data => {
                     if (data.valid) {
-                        setCupomValido({ desconto: data.discount_value, id: data.id });
+                        setCupomValido({ desconto: data.discount_value, id: data.id, is_partner_coupon: data.is_partner_coupon });
                         setCupomInfo(data);
                         toast({ title: 'Sucesso', description: `Cupom auto-aplicado! R$${data.discount_value}/mês` });
                     }

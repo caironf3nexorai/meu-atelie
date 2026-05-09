@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { Percent, Users, Copy, Check, DollarSign, Calendar, CreditCard, ChevronRight, Loader2 } from 'lucide-react';
+import { Percent, Users, User, Copy, Check, DollarSign, Calendar, CreditCard, ChevronRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
