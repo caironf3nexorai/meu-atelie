@@ -34,6 +34,7 @@ export default function RegisterPage() {
     const supabase = createClient();
     const [searchParams] = useSearchParams();
     const conviteCode = searchParams.get('convite');
+    const isTrial = searchParams.get('trial') === 'true';
     const [step, setStep] = useState(1);
     const [errorMsg, setErrorMsg] = useState('');
     const [loadingCep, setLoadingCep] = useState(false);
@@ -222,6 +223,28 @@ export default function RegisterPage() {
                         message: `Sua amiga ${data.fullName.split(' ')[0]} acabou de se cadastrar pelo seu link! Você ganhou 2 créditos.`,
                         type: 'success'
                     });
+                }
+            }
+
+            // 5. Apply Trial if requested
+            if (isTrial) {
+                try {
+                    const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+                    const session = await supabase.auth.getSession();
+                    const token = session.data.session?.access_token;
+                    
+                    if (token) {
+                        await fetch(`${SUPABASE_URL}/functions/v1/aplicar-trial`, {
+                            method: 'POST',
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({ partner_id: refCode || null })
+                        });
+                    }
+                } catch (e) {
+                    console.error("Error applying trial", e);
                 }
             }
 

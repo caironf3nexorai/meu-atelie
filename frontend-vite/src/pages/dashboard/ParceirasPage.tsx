@@ -18,6 +18,8 @@ export default function ParceirasPage() {
     const [referredUsers, setReferredUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [copied, setCopied] = useState(false);
+    const [copiedTrial, setCopiedTrial] = useState(false);
+    const [trialSpots, setTrialSpots] = useState(0);
 
     useEffect(() => {
         if (profile) {
@@ -54,6 +56,17 @@ export default function ParceirasPage() {
             if (refError) throw refError;
             setReferredUsers(refData || []);
 
+            // 3. Buscar limites da campanha de trial
+            const { data: campaignData, error: campaignError } = await supabase
+                .from('campaign_config')
+                .select('*')
+                .limit(1)
+                .single();
+
+            if (!campaignError && campaignData) {
+                setTrialSpots(campaignData.partner_trial_limit - campaignData.partner_trial_used);
+            }
+
         } catch (error: any) {
             console.error("Erro ao buscar dados de parceira:", error);
         } finally {
@@ -72,6 +85,17 @@ export default function ParceirasPage() {
         setTimeout(() => setCopied(false), 2000);
     };
 
+    const copyTrialLink = () => {
+        const trialLink = `${window.location.origin}/cadastro?trial=true&ref=${profile?.id || ''}`;
+        navigator.clipboard.writeText(trialLink);
+        setCopiedTrial(true);
+        toast({
+            title: "Link Copiado!",
+            description: "O link de 15 Dias Grátis foi copiado para sua área de transferência."
+        });
+        setTimeout(() => setCopiedTrial(false), 2000);
+    };
+
     if (!profile?.is_partner) {
         return (
             <div className="flex flex-col items-center justify-center h-[60vh]">
@@ -87,6 +111,7 @@ export default function ParceirasPage() {
     const totalToReceive = commissions.filter(c => c.status === 'pending').reduce((sum, c) => sum + Number(c.amount), 0);
     const totalPaid = commissions.filter(c => c.status === 'paid').reduce((sum, c) => sum + Number(c.amount), 0);
     const referralLink = `${window.location.origin}/cadastro?ref=${profile?.referral_code || ''}`;
+    const trialLink = `${window.location.origin}/cadastro?trial=true&ref=${profile?.id || ''}`;
 
     if (loading) {
         return (
@@ -140,6 +165,45 @@ export default function ParceirasPage() {
                     </div>
                 </CardContent>
             </Card>
+
+            {/* Trial Campaign Card */}
+            {trialSpots > 0 && (
+                <Card className="border-border shadow-sm rounded-3xl overflow-hidden bg-white">
+                    <CardContent className="p-6 sm:p-8">
+                        <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
+                            <div className="flex-1">
+                                <h3 className="font-display font-bold text-xl text-[#15803d] mb-2 flex items-center gap-2">
+                                    <Percent className="w-5 h-5" />
+                                    Campanha Especial: 15 Dias Grátis
+                                </h3>
+                                <p className="text-sm font-ui text-text-muted mb-4">
+                                    Ofereça um teste VIP de 15 dias para sua audiência. Se elas assinarem depois, 
+                                    a comissão é sua! As vagas são limitadas na rede de parceiras.
+                                </p>
+                                <div className="flex gap-2 w-full max-w-md">
+                                    <Input 
+                                        readOnly 
+                                        value={trialLink} 
+                                        className="font-mono text-sm bg-stone-50 border-border-light h-12 rounded-xl focus-visible:ring-0" 
+                                    />
+                                    <Button 
+                                        onClick={copyTrialLink}
+                                        className="h-12 w-12 shrink-0 rounded-xl bg-[#15803d] hover:bg-[#166534] text-white"
+                                    >
+                                        {copiedTrial ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                                    </Button>
+                                </div>
+                            </div>
+                            <div className="hidden md:block w-px h-24 bg-border-light mx-4" />
+                            <div className="bg-[#22c55e]/10 border border-[#22c55e]/20 rounded-2xl p-5 flex-shrink-0 w-full md:w-auto">
+                                <p className="text-xs font-bold text-[#15803d] tracking-wider uppercase mb-1">Vagas Restantes</p>
+                                <p className="font-display text-4xl font-bold text-[#15803d]">{trialSpots}</p>
+                                <p className="text-xs text-[#15803d] mt-1 font-ui">Disponíveis na rede</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
 
             {/* Cards de Métricas */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

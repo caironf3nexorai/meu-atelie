@@ -145,6 +145,8 @@ export default function LandingPage() {
     const [planPrice, setPlanPrice] = useState(97);
     const [isPrelancamento, setIsPrelancamento] = useState(true);
     const [scrolled, setScrolled] = useState(false);
+    const [hasTrial, setHasTrial] = useState(false);
+    const [trialSpots, setTrialSpots] = useState(0);
 
     const [waitlistName, setWaitlistName] = useState('');
     const [waitlistEmail, setWaitlistEmail] = useState('');
@@ -179,7 +181,7 @@ export default function LandingPage() {
         if (isPrelancamento) {
             document.getElementById('lista-espera')?.scrollIntoView({ behavior: 'smooth' });
         } else {
-            navigate('/cadastro');
+            navigate(hasTrial ? '/cadastro?trial=true' : '/cadastro');
         }
     };
 
@@ -188,6 +190,13 @@ export default function LandingPage() {
             const { data } = await supabase.from('plan_config').select('premium_price_brl, prelancamento').maybeSingle();
             if (data?.premium_price_brl) setPlanPrice(data.premium_price_brl);
             setIsPrelancamento(data?.prelancamento ?? true);
+
+            const { data: campaignData } = await supabase.from('campaign_config').select('*').maybeSingle();
+            if (campaignData) {
+                const remaining = campaignData.general_trial_limit - campaignData.general_trial_used;
+                setHasTrial(remaining > 0);
+                setTrialSpots(remaining);
+            }
         };
         fetchPlanConfig();
 
@@ -652,6 +661,14 @@ export default function LandingPage() {
                             </span>
                         </div>
                     )}
+                    {!isPrelancamento && hasTrial && (
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '999px', padding: '8px 16px', marginBottom: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22c55e', animation: 'pulse 2s infinite', display: 'block' }} />
+                            <span style={{ color: '#15803d', fontWeight: 800, fontSize: 'clamp(11px, 3vw, 13px)', textAlign: 'center' }}>
+                                🎉 Atenção: Restam apenas {trialSpots > 3 ? 2 : trialSpots} vagas de teste grátis (15 dias)!
+                            </span>
+                        </div>
+                    )}
                     <h2 style={{ fontFamily: 'Playfair Display, serif', fontSize: 'clamp(32px, 4vw, 48px)', color: darkColor }}>Invista no seu ateliê</h2>
                     <p style={{ color: mutedColor, fontSize: '18px', marginTop: '12px' }}>Uma assinatura que se paga com uma peça vendida a mais por mês.</p>
                 </div>
@@ -694,7 +711,7 @@ export default function LandingPage() {
                             <li><span style={{ color: secondaryColor }}>✓</span> Acesso completo à IA Lia 24h</li>
                         </ul>
                         <button onClick={handleCTA} style={{ width: '100%', padding: '16px', borderRadius: '12px', border: 'none', background: primaryColor, color: 'white', fontWeight: 800, fontSize: '16px', cursor: 'pointer' }}>
-                            {isPrelancamento ? 'Garantir Vaga de Fundadora' : 'Assinar Pró Agora'}
+                            {isPrelancamento ? 'Garantir Vaga de Fundadora' : (hasTrial ? 'Começar 15 Dias Grátis' : 'Assinar Pró Agora')}
                         </button>
                     </div>
                 </div>

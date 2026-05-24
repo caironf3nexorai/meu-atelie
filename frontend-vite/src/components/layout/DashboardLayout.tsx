@@ -3,6 +3,7 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { Outlet } from 'react-router-dom';
+import TrialExpiredPopup from '@/components/dashboard/TrialExpiredPopup';
 
 export default function DashboardLayout() {
     return (
@@ -22,6 +23,9 @@ export default function DashboardLayout() {
 
             {/* Mobile Bottom Navigation (< lg) */}
             <BottomNav />
+
+            {/* Trial Expiration Popup */}
+            <TrialExpiredPopup />
         </div>
     );
 }

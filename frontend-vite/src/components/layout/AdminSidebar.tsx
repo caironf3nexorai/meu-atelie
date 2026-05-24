@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, PackageOpen, Settings, LogOut, Link2, Mail, Shield, Percent } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, PackageOpen, Settings, LogOut, Link2, Mail, Shield, Percent, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { usePlatform } from '@/contexts/PlatformContext';
@@ -13,6 +13,7 @@ const adminNavItems = [
     { href: '/admin/pagamentos', label: 'Pagamentos', icon: CreditCard, exact: false },
     { href: '/admin/pacotes', label: 'Pacotes de Crédito', icon: PackageOpen, exact: false },
     { href: '/admin/parceiras', label: 'Parceiras', icon: Percent, exact: false },
+    { href: '/admin/campanhas', label: 'Campanhas', icon: Target, exact: false },
     { href: '/admin/convites', label: 'Convites', icon: Link2, exact: false },
     { href: '/admin/emails', label: 'Emails', icon: Mail, exact: false },
     { href: '/admin/infraestrutura', label: 'Infraestrutura', icon: Shield, exact: false },

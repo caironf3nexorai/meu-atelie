@@ -52,6 +52,7 @@ const AdminPackagesPage = React.lazy(() => import('@/pages/admin/AdminPackagesPa
 const AdminConvitesPage = React.lazy(() => import('@/pages/admin/AdminConvitesPage'));
 const AdminEmailsPage = React.lazy(() => import('@/pages/admin/AdminEmailsPage'));
 const AdminParceirasPage = React.lazy(() => import('@/pages/admin/AdminParceirasPage'));
+const AdminCampanhasPage = React.lazy(() => import('@/pages/admin/AdminCampanhasPage'));
 const InfraestruturaPage = React.lazy(() => import('@/pages/admin/InfraestruturaPage'));
 const AdminLayout = React.lazy(() => import('@/components/layout/AdminLayout'));
 
@@ -147,6 +148,7 @@ const router = createBrowserRouter([
                     { path: 'pagamentos', element: <AdminPaymentsPage /> },
                     { path: 'pacotes', element: <AdminPackagesPage /> },
                     { path: 'parceiras', element: <AdminParceirasPage /> },
+                    { path: 'campanhas', element: <AdminCampanhasPage /> },
                     { path: 'convites', element: <AdminConvitesPage /> },
                     { path: 'emails', element: <AdminEmailsPage /> },
                     { path: 'infraestrutura', element: <InfraestruturaPage /> },
