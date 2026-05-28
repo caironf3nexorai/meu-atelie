@@ -228,9 +228,23 @@ export default function RegisterPage() {
                 }
             }
 
-            // 5. Apply Trial if requested
-            if (isTrial) {
+            // 5. Apply Trial if requested or if partner referral
+            if (isTrial || isPartnerTrial) {
                 try {
+                    // Fallback: Atualiza o plano diretamente pelo frontend caso a Edge Function falhe (ex: tabela campaign_config vazia)
+                    const trialExpiresAt = new Date();
+                    trialExpiresAt.setDate(trialExpiresAt.getDate() + 15);
+                    
+                    await supabase.from('profiles').update({
+                        plan: 'premium',
+                        had_trial: true,
+                        trial_starts_at: new Date().toISOString(),
+                        trial_expires_at: trialExpiresAt.toISOString(),
+                        premium_starts_at: new Date().toISOString(),
+                        premium_expires_at: trialExpiresAt.toISOString(),
+                    }).eq('id', authData.user.id);
+
+                    // Tenta chamar a Edge Function para atualizar as métricas/limites da campanha
                     const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
                     let token = authData.session?.access_token;
                     if (!token) {
@@ -239,19 +253,17 @@ export default function RegisterPage() {
                     }
                     
                     if (token) {
-                        await fetch(`${SUPABASE_URL}/functions/v1/aplicar-trial`, {
+                        fetch(`${SUPABASE_URL}/functions/v1/aplicar-trial`, {
                             method: 'POST',
                             headers: { 
                                 'Content-Type': 'application/json',
                                 'Authorization': `Bearer ${token}`
                             },
                             body: JSON.stringify({ isPartnerTrial })
-                        });
-                    } else {
-                        console.error('No session token available to apply trial');
+                        }).catch(e => console.error("Error applying trial via Edge Function", e));
                     }
                 } catch (e) {
-                    console.error("Error applying trial", e);
+                    console.error("Error in fallback trial application", e);
                 }
             }
 
