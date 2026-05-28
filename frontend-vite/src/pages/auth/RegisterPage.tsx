@@ -198,6 +198,7 @@ export default function RegisterPage() {
 
             // 4. Referral Logic check
             const refCode = searchParams.get('ref');
+            let isPartnerTrial = false;
 
             if (refCode) {
                 const { data: referer } = await supabase
@@ -207,6 +208,7 @@ export default function RegisterPage() {
                     .single();
 
                 if (referer) {
+                    isPartnerTrial = true;
                     await supabase.from('referrals').insert({
                         referrer_id: referer.id,
                         referred_id: authData.user.id,
@@ -230,8 +232,11 @@ export default function RegisterPage() {
             if (isTrial) {
                 try {
                     const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-                    const session = await supabase.auth.getSession();
-                    const token = session.data.session?.access_token;
+                    let token = authData.session?.access_token;
+                    if (!token) {
+                        const sessionInfo = await supabase.auth.getSession();
+                        token = sessionInfo.data.session?.access_token;
+                    }
                     
                     if (token) {
                         await fetch(`${SUPABASE_URL}/functions/v1/aplicar-trial`, {
@@ -240,8 +245,10 @@ export default function RegisterPage() {
                                 'Content-Type': 'application/json',
                                 'Authorization': `Bearer ${token}`
                             },
-                            body: JSON.stringify({ partner_id: refCode || null })
+                            body: JSON.stringify({ isPartnerTrial })
                         });
+                    } else {
+                        console.error('No session token available to apply trial');
                     }
                 } catch (e) {
                     console.error("Error applying trial", e);

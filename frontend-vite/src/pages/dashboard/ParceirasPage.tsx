@@ -86,7 +86,7 @@ export default function ParceirasPage() {
     };
 
     const copyTrialLink = () => {
-        const trialLink = `${window.location.origin}/cadastro?trial=true&ref=${profile?.id || ''}`;
+        const trialLink = `${window.location.origin}/cadastro?trial=true&ref=${profile?.referral_code || ''}`;
         navigator.clipboard.writeText(trialLink);
         setCopiedTrial(true);
         toast({
@@ -111,7 +111,7 @@ export default function ParceirasPage() {
     const totalToReceive = commissions.filter(c => c.status === 'pending').reduce((sum, c) => sum + Number(c.amount), 0);
     const totalPaid = commissions.filter(c => c.status === 'paid').reduce((sum, c) => sum + Number(c.amount), 0);
     const referralLink = `${window.location.origin}/cadastro?ref=${profile?.referral_code || ''}`;
-    const trialLink = `${window.location.origin}/cadastro?trial=true&ref=${profile?.id || ''}`;
+    const trialLink = `${window.location.origin}/cadastro?trial=true&ref=${profile?.referral_code || ''}`;
 
     if (loading) {
         return (

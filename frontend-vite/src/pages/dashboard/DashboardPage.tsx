@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useEffect } from 'react';
 
 export default function DashboardPage() {
+    const navigate = useNavigate();
     const supabase = createClient();
     const [profile, setProfile] = useState<any>(null);
     const [planConfig, setPlanConfig] = useState<any>(null);
@@ -179,7 +180,10 @@ export default function DashboardPage() {
                     ].map((tool, idx) => (
                         <motion.div key={idx} variants={itemVariants}>
                             <PremiumLock isLocked={!isPremium} onClick={() => !isPremium && setShowUpgrade(true)} className="h-full">
-                                <div className="bg-surface rounded-2xl p-6 border border-border-light hover:border-text-muted/30 transition-colors h-full flex flex-col cursor-pointer group">
+                                <div 
+                                    onClick={() => isPremium && navigate(tool.href)}
+                                    className="bg-surface rounded-2xl p-6 border border-border-light hover:border-text-muted/30 transition-colors h-full flex flex-col cursor-pointer group"
+                                >
                                     <div className={`w-10 h-10 rounded-xl ${tool.bg} ${tool.color} flex items-center justify-center mb-4`}>
                                         <tool.icon className="w-5 h-5" />
                                     </div>

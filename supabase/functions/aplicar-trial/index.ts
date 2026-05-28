@@ -30,7 +30,7 @@ serve(async (req) => {
         
         if (authError || !user) throw new Error('Invalid token')
 
-        const { partner_id } = await req.json()
+        const { isPartnerTrial } = await req.json()
 
         // 1. Check if user already had trial
         const { data: profile } = await supabase
@@ -54,8 +54,6 @@ serve(async (req) => {
             .single()
 
         if (!campaignConfig) throw new Error('Campaign config not found')
-
-        let isPartnerTrial = !!partner_id;
 
         // 3. Check limits
         if (isPartnerTrial) {
@@ -99,14 +97,6 @@ serve(async (req) => {
                 premium_expires_at: trialExpiresAt.toISOString(),
             })
             .eq('id', user.id)
-
-        // 6. Link referral if partner_id is provided
-        if (isPartnerTrial) {
-            await supabase.from('referrals').insert({
-                referrer_id: partner_id,
-                referred_id: user.id
-            });
-        }
 
         return new Response(
             JSON.stringify({ success: true, message: 'Teste gratuito ativado com sucesso!' }),
