@@ -88,6 +88,10 @@ export default function DashboardPage() {
         show: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 300, damping: 24 } }
     };
 
+    const trialExpiresAt = profile?.trial_expires_at ? new Date(profile.trial_expires_at) : null;
+    const isTrialActive = profile?.had_trial && isPremium && trialExpiresAt && trialExpiresAt > new Date();
+    const trialDaysLeft = isTrialActive ? Math.ceil((trialExpiresAt.getTime() - new Date().getTime()) / (1000 * 3600 * 24)) : 0;
+
     return (
         <div className="space-y-8 pb-12">
             {/* Hero Section */}
@@ -130,6 +134,31 @@ export default function DashboardPage() {
                     </div>
                 </div>
             </section>
+
+            {/* Trial Banner */}
+            {isTrialActive && (
+                <section className="bg-gradient-to-r from-accent/10 to-primary/5 border border-accent/20 rounded-[24px] p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm relative overflow-hidden">
+                    <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-accent/10 blur-3xl rounded-full" />
+                    <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-24 h-24 bg-primary/10 blur-3xl rounded-full" />
+                    
+                    <div className="flex items-center gap-4 relative z-10">
+                        <div className="w-12 h-12 bg-white/80 backdrop-blur rounded-2xl flex items-center justify-center shadow-sm text-accent shrink-0">
+                            <Sparkles className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h3 className="font-display text-xl text-text font-bold">Teste Gratuito Ativo</h3>
+                            <p className="font-ui text-text-light text-sm mt-1">
+                                Você tem <span className="font-bold text-accent">{trialDaysLeft} {trialDaysLeft === 1 ? 'dia' : 'dias'}</span> restantes para aproveitar todos os recursos Premium.
+                            </p>
+                        </div>
+                    </div>
+                    <div className="relative z-10">
+                        <Link to="/dashboard/assinar" className="bg-accent hover:bg-accent/90 text-white font-medium py-2.5 px-6 rounded-xl transition-all shadow-sm hover:shadow text-sm block text-center whitespace-nowrap">
+                            Assinar Definitivo
+                        </Link>
+                    </div>
+                </section>
+            )}
 
             {/* Primary Actions */}
             <section className="grid md:grid-cols-2 gap-6">
