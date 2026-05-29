@@ -285,7 +285,15 @@ export default function AgendaPage() {
                         <form onSubmit={handleCreate} className="space-y-4 pt-4">
                             <div className="space-y-2">
                                 <Label>Cliente</Label>
-                                <select required value={formData.client_id} onChange={(e) => setFormData({ ...formData, client_id: e.target.value })} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                                {clients.length === 0 ? (
+                                    <div className="p-3 bg-warn/10 text-warn-dark rounded-xl border border-warn/20 text-sm font-ui mb-2 flex flex-col gap-2">
+                                        <span>Você ainda não tem clientes cadastrados!</span>
+                                        <Button size="sm" variant="outline" className="w-fit" onClick={(e) => { e.preventDefault(); navigate('/dashboard/clientes'); }}>
+                                            Cadastrar meu primeiro cliente
+                                        </Button>
+                                    </div>
+                                ) : null}
+                                <select required disabled={clients.length === 0} value={formData.client_id} onChange={(e) => setFormData({ ...formData, client_id: e.target.value })} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50">
                                     <option value="" disabled>Selecione uma cliente...</option>
                                     {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                 </select>
